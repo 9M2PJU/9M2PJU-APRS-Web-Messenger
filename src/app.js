@@ -25,7 +25,8 @@ const elements = {
     messageForm: document.getElementById('message-form'),
     messageInput: document.getElementById('message-input'),
     currentChatName: document.getElementById('current-chat-name'),
-    logoutBtn: document.getElementById('logout-btn')
+    logoutBtn: document.getElementById('logout-btn'),
+    addContactBtn: document.getElementById('add-contact-btn')
 };
 
 // Initialization
@@ -33,6 +34,7 @@ function init() {
     elements.loginForm.addEventListener('submit', handleLogin);
     elements.messageForm.addEventListener('submit', handleSendMessage);
     elements.logoutBtn.addEventListener('click', handleLogout);
+    elements.addContactBtn.addEventListener('click', handleAddContact);
 
     // Check if we have saved credentials
     const savedCall = localStorage.getItem('aprs_callsign');
@@ -68,6 +70,26 @@ function handleLogout() {
     state.socket = null;
     elements.dashboard.classList.add('hidden');
     elements.loginOverlay.classList.remove('hidden');
+}
+
+function handleAddContact() {
+    const contact = prompt('Enter the Callsign-SSID you want to message (e.g. 9M2PJU-10):');
+    if (!contact) return;
+
+    const cleanContact = contact.trim().toUpperCase();
+    if (cleanContact === state.callsign) {
+        alert("You can't message yourself!");
+        return;
+    }
+
+    if (!state.messages[cleanContact]) {
+        state.messages[cleanContact] = [];
+    }
+
+    state.currentContact = cleanContact;
+    elements.currentChatName.textContent = cleanContact;
+    renderContacts();
+    renderMessages();
 }
 
 function handleSendMessage(e) {
