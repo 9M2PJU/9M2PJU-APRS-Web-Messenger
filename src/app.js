@@ -44,7 +44,8 @@ const elements = {
     messageInput: document.getElementById('message-input'),
     currentChatName: document.getElementById('current-chat-name'),
     logoutBtn: document.getElementById('logout-btn'),
-    addContactBtn: document.getElementById('add-contact-btn')
+    addContactBtn: document.getElementById('add-contact-btn'),
+    loginError: document.getElementById('login-error')
 };
 
 // Initialization
@@ -69,6 +70,9 @@ function init() {
 // Event Handlers
 async function handleLogin(e) {
     e.preventDefault();
+    elements.loginError.textContent = '';
+    elements.loginError.classList.add('hidden');
+
     const callsign = document.getElementById('callsign').value.trim().toUpperCase();
     const passcode = document.getElementById('passcode').value.trim();
 
@@ -143,8 +147,8 @@ function connectWebSocket() {
             const loginLine = generateLoginLine(state.callsign, state.passcode);
             state.socket.send(loginLine);
 
-            elements.loginOverlay.classList.add('hidden');
-            elements.dashboard.classList.remove('hidden');
+            // elements.loginOverlay.classList.add('hidden');
+            // elements.dashboard.classList.remove('hidden');
             elements.displayCallsign.textContent = state.callsign;
             elements.connectionStatus.classList.add('online');
         };
@@ -165,11 +169,14 @@ function connectWebSocket() {
                 if (line.startsWith('# logresp')) {
                     if (line.includes('verified')) {
                         console.log('Login Verified');
+                        elements.loginError.textContent = '';
+                        elements.loginError.classList.add('hidden');
                         elements.loginOverlay.classList.add('hidden');
                         elements.dashboard.classList.remove('hidden');
                     } else {
                         console.error('Login Failed:', line);
-                        alert('APRS-IS Login Failed: ' + line.substring(2));
+                        elements.loginError.textContent = 'Login Failed: ' + line.split(' ').slice(2).join(' ');
+                        elements.loginError.classList.remove('hidden');
                         state.socket.close();
                     }
                 }

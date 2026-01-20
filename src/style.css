@@ -104,6 +104,17 @@ h1 {
     font-size: 0.9rem;
 }
 
+.error-text {
+    color: var(--error-red);
+    background: rgba(255, 85, 85, 0.1);
+    border: 1px solid var(--error-red);
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    margin-bottom: 20px;
+    font-family: var(--font-mono);
+}
+
 .input-group {
     text-align: left;
     margin-bottom: 20px;
