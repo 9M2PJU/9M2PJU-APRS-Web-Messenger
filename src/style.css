@@ -1,17 +1,19 @@
 :root {
-    --bg-color: #05070a;
-    --glass-bg: rgba(13, 17, 23, 0.7);
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --accent-color: #00f2ff;
-    --accent-glow: rgba(0, 242, 255, 0.4);
-    --text-primary: #e0faff;
-    --text-secondary: #8da4aa;
-    --msg-sent: #008eb4;
-    --msg-received: #1a242d;
-    --error-red: #ff3e3e;
-    --success-green: #00ff9d;
+    --bg-color: #171d20;
+    --glass-bg: rgba(23, 29, 32, 0.85);
+    --glass-border: rgba(23, 147, 209, 0.2);
+    --accent-color: #1793d1;
+    /* Arch Linux Blue */
+    --accent-glow: rgba(23, 147, 209, 0.3);
+    --text-primary: #f0f0f0;
+    --text-secondary: #9eaab5;
+    --msg-sent: #1793d1;
+    --msg-received: #2a3439;
+    --error-red: #ff5555;
+    --success-green: #55ff55;
     --font-main: 'Inter', sans-serif;
-    --font-heading: 'Orbitron', sans-serif;
+    --font-heading: 'JetBrains Mono', monospace;
+    --font-mono: 'JetBrains Mono', monospace;
 }
 
 * {
@@ -23,10 +25,9 @@
 body {
     background-color: var(--bg-color);
     background-image:
-        radial-gradient(circle at 20% 20%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
-        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+        radial-gradient(circle at 0% 0%, rgba(23, 147, 209, 0.05) 0%, transparent 50%);
     color: var(--text-primary);
-    font-family: var(--font-main);
+    font-family: var(--font-heading);
     height: 100vh;
     overflow: hidden;
     display: flex;
@@ -362,9 +363,10 @@ input:focus {
 
 .msg-bubble {
     padding: 10px 16px;
-    border-radius: 15px;
-    font-size: 0.9rem;
-    line-height: 1.4;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    font-family: var(--font-mono);
 }
 
 .sent .msg-bubble {
@@ -394,6 +396,7 @@ input:focus {
 .chat-input-area input {
     flex: 1;
     background: rgba(255, 255, 255, 0.03);
+    font-family: var(--font-mono);
 }
 
 .btn-icon {

@@ -6,12 +6,30 @@ const state = {
     callsign: '',
     passcode: '',
     currentContact: 'APRS-IS',
-    messages: {
+    messages: loadMessages() || {
         'APRS-IS': [
             { source: 'System', content: 'Welcome to APRS Web Messenger. Connect to start messaging!', type: 'received', time: 'Now' }
         ]
     }
 };
+
+function loadMessages() {
+    try {
+        const saved = localStorage.getItem('aprs_messages');
+        return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+        console.error('Failed to load messages:', e);
+        return null;
+    }
+}
+
+function saveMessages() {
+    try {
+        localStorage.setItem('aprs_messages', JSON.stringify(state.messages));
+    } catch (e) {
+        console.error('Failed to save messages:', e);
+    }
+}
 
 // DOM Elements
 const elements = {
@@ -43,6 +61,9 @@ function init() {
         document.getElementById('callsign').value = savedCall;
         document.getElementById('passcode').value = savedPass;
     }
+
+    renderContacts();
+    renderMessages();
 }
 
 // Event Handlers
@@ -170,6 +191,7 @@ function addMessageToState(contact, msg) {
         state.messages[contact] = [];
     }
     state.messages[contact].push(msg);
+    saveMessages();
 }
 
 function renderMessages() {
