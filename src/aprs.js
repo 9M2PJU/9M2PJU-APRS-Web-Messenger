@@ -71,13 +71,13 @@ export function encodePosition(lat, lon) {
 }
 
 /**
- * Generates an APRS position packet (lat/lon + comment)
+ * Generates an APRS position packet (lat/lon + symbol + comment)
  * Format: SOURCE>APRS,TCPIP*:!LAT/LON[COMMENT
  * ! = No messaging capability (in this specific format)
- * / = Table / (primary)
- * [ = Symbol [ (usually a jogger/web symbol)
+ * symbolKey = The symbol character (e.g. [ for jogger, > for car)
+ * table = / or \ for primary/secondary table
  */
-export function generatePositionPacket(source, lat, lon, comment) {
+export function generatePositionPacket(source, lat, lon, symbol = '[', table = '/', comment = '') {
     const pos = encodePosition(lat, lon);
-    return `${source.toUpperCase()}>APJUMB,TCPIP*:!${pos.lat}/${pos.lon}[${comment}\r\n`;
+    return `${source.toUpperCase()}>APJUMB,TCPIP*:!${pos.lat}${table}${pos.lon}${symbol}${comment}\r\n`;
 }

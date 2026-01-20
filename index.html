@@ -28,7 +28,7 @@
 \/_/\ \
      \/
                 </pre>
-                <h1>APRS Messenger</h1>
+                <h1>9M2PJU APRS Web Messenger</h1>
                 <p class="subtitle">Enter your credentials to connect</p>
                 <div id="login-error" class="error-text hidden"></div>
                 <form id="login-form">
@@ -51,7 +51,7 @@
         <main id="dashboard" class="hidden">
             <header class="glass-nav">
                 <div class="logo">
-                    <span class="logo-text">APRS <span class="accent">Messenger</span></span>
+                    <span class="logo-text">9M2PJU APRS <span class="accent">Web Messenger</span></span>
                 </div>
                 <div class="user-info">
                     <div class="stats">
@@ -127,6 +127,8 @@
                             <div class="radar-line"></div>
                             <div id="radar-info">NO_GPS_LOCK</div>
                         </div>
+                        <button id="send-gps-btn" class="btn-primary btn-full"
+                            style="margin-top: 10px; font-size: 0.7rem;">SEND GPS NOW</button>
                     </div>
                     <div class="panel-section">
                         <h3>STATION_LOG</h3>
@@ -172,7 +174,24 @@
                             <label>Interval (minutes)</label>
                             <input type="number" id="settings-interval" value="20" min="5">
                         </div>
+                        <div class="input-group">
+                            <label>APRS Symbol</label>
+                            <select id="settings-symbol">
+                                <option value="[">Jogger (Default)</option>
+                                <option value=">">Car</option>
+                                <option value="b">Bicycle</option>
+                                <option value="<">Motorcycle</option>
+                                <option value="j">Jeep</option>
+                                <option value="k">Truck</option>
+                                <option value="v">Van</option>
+                                <option value="n">Node (Circle)</option>
+                                <option value="y">House</option>
+                            </select>
+                        </div>
                     </section>
+                </div>
+                <div class="settings-actions-quick">
+                    <button id="manual-gps-btn" class="btn-primary btn-full">TRIGGER MANUAL GPS BEACON</button>
                 </div>
                 <div class="settings-footer">
                     <button id="save-settings" class="btn-primary">Apply Changes</button>

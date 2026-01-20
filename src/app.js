@@ -17,7 +17,8 @@ const state = {
     reconnectAt: 0,
     beaconTimer: null,
     lastPos: null,
-    gpsWatchId: null
+    gpsWatchId: null,
+    symbol: localStorage.getItem('aprs_symbol') || '['
 };
 
 function loadMessages() {
@@ -68,7 +69,10 @@ const elements = {
     statPackets: document.getElementById('stat-packets'),
     clearChatBtn: document.getElementById('clear-chat-btn'),
     macroBtns: document.querySelectorAll('.macro-btn'),
-    radarInfo: document.getElementById('radar-info')
+    radarInfo: document.getElementById('radar-info'),
+    manualGpsBtn: document.getElementById('manual-gps-btn'),
+    settingsSymbol: document.getElementById('settings-symbol'),
+    sendGpsBtn: document.getElementById('send-gps-btn')
 };
 
 // Initialization
@@ -96,6 +100,16 @@ function init() {
 
     setInterval(updateStats, 1000);
     startGpsTracking();
+
+    elements.manualGpsBtn.addEventListener('click', handleManualGps);
+    elements.sendGpsBtn.addEventListener('click', handleManualGps);
+
+    // Set initial values in settings modal
+    elements.settingsSymbol.value = state.symbol;
+    elements.settingsStatus.value = localStorage.getItem('aprs_status') || 'Online on 9M2PJU APRS Web Messenger';
+    elements.settingsInterval.value = localStorage.getItem('aprs_interval') || 20;
+    elements.settingsPasscode.value = state.passcode;
+
     renderContacts();
     renderMessages();
 }
@@ -370,8 +384,30 @@ function handleSaveSettings() {
     }
 
     localStorage.setItem('aprs_passcode', state.passcode);
+    localStorage.setItem('aprs_symbol', elements.settingsSymbol.value);
+    localStorage.setItem('aprs_status', elements.settingsStatus.value);
+    localStorage.setItem('aprs_interval', elements.settingsInterval.value);
+
+    state.symbol = elements.settingsSymbol.value;
+
     elements.settingsModal.classList.add('hidden');
-    alert('Settings applied locally. Reconnect to apply to server.');
+    alert('Settings applied locally. Restarting beacons...');
+
+    // Restart beaconing with new settings
+    startBeaconing();
+}
+
+function handleManualGps() {
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+        alert('Not connected to APRS-IS');
+        return;
+    }
+    if (!state.lastPos) {
+        alert('Waiting for GPS lock...');
+        return;
+    }
+    sendBeacon();
+    alert('Manual position beacon sent.');
 }
 
 function handleClearChat() {
@@ -395,12 +431,12 @@ function startBeaconing() {
 function sendBeacon() {
     if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
 
-    const comment = elements.settingsStatus.value || 'Online on APRS Web Messenger';
+    const comment = elements.settingsStatus.value || 'Online on 9M2PJU APRS Web Messenger';
     let packet;
 
     if (state.lastPos) {
-        packet = generatePositionPacket(state.callsign, state.lastPos.lat, state.lastPos.lon, comment);
-        logToConsole(`>>> POSITION_SENT: ${state.lastPos.lat.toFixed(4)}, ${state.lastPos.lon.toFixed(4)}`);
+        packet = generatePositionPacket(state.callsign, state.lastPos.lat, state.lastPos.lon, state.symbol, '/', comment);
+        logToConsole(`>>> POSITION_SENT: ${state.lastPos.lat.toFixed(4)}, ${state.lastPos.lon.toFixed(4)} [${state.symbol}]`);
     } else {
         packet = `${state.callsign}>APJUMB,TCPIP*::AIS-ST   :${comment}\r\n`;
         logToConsole('>>> BEACON_SENT (Status Only)');

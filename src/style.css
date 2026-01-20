@@ -655,6 +655,22 @@ input:focus {
     text-transform: uppercase;
 }
 
+.settings-actions-quick {
+    margin-bottom: 25px;
+    padding: 15px;
+    background: rgba(23, 147, 209, 0.05);
+    border: 1px dashed var(--arch-blue);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-full {
+    width: 100%;
+    justify-content: center;
+}
+
 .settings-footer {
     display: flex;
     justify-content: flex-end;
