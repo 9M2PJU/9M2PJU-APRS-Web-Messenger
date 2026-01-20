@@ -72,7 +72,11 @@ const elements = {
     radarInfo: document.getElementById('radar-info'),
     manualGpsBtn: document.getElementById('manual-gps-btn'),
     settingsSymbol: document.getElementById('settings-symbol'),
-    sendGpsBtn: document.getElementById('send-gps-btn')
+    sendGpsBtn: document.getElementById('send-gps-btn'),
+    toggleContactsBtn: document.getElementById('toggle-contacts'),
+    toggleRadarBtn: document.getElementById('toggle-radar'),
+    sidebar: document.querySelector('.sidebar'),
+    radarSidebar: document.querySelector('.right-panel')
 };
 
 // Initialization
@@ -92,6 +96,23 @@ function init() {
             elements.messageInput.value = btn.textContent;
             handleSendMessage({ preventDefault: () => { } });
         });
+    });
+
+    elements.messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage(e);
+        }
+    });
+
+    elements.toggleContactsBtn.addEventListener('click', () => {
+        elements.sidebar.classList.toggle('active');
+        elements.radarSidebar.classList.remove('active');
+    });
+
+    elements.toggleRadarBtn.addEventListener('click', () => {
+        elements.radarSidebar.classList.toggle('active');
+        elements.sidebar.classList.remove('active');
     });
 
     if (state.callsign) {
@@ -180,9 +201,14 @@ function handleAddContact() {
 }
 
 function handleSendMessage(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const content = elements.messageInput.value.trim();
-    if (!content || !state.socket || state.socket.readyState !== WebSocket.OPEN) return;
+    if (!content) return;
+
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+        alert('Cannot send: Not connected to APRS-IS Gateway.');
+        return;
+    }
 
     const packet = generateMessagePacket(state.callsign, state.currentContact, content);
     state.socket.send(packet);
