@@ -1,4 +1,23 @@
-import { generateLoginLine, generateMessagePacket, parsePacket, APRS_CONFIG } from './aprs.js';
+import { generateLoginLine, generateMessagePacket, generatePositionPacket, parsePacket, APRS_CONFIG } from './aprs.js';
+
+// APRS Symbols Map (Common Subset)
+const APRS_SYMBOLS = [
+    { code: '/>', name: 'Car', char: '>', table: '/' },
+    { code: '/[', name: 'Jogger', char: '[', table: '/' },
+    { code: '/b', name: 'Bike', char: 'b', table: '/' },
+    { code: '/-', name: 'House', char: '-', table: '/' },
+    { code: '/v', name: 'Van', char: 'v', table: '/' },
+    { code: '/k', name: 'Truck', char: 'k', table: '/' },
+    { code: '/j', name: 'Jeep', char: 'j', table: '/' },
+    { code: '/s', name: 'Boat', char: 's', table: '/' },
+    { code: '/Y', name: 'Yacht', char: 'Y', table: '/' },
+    { code: '/O', name: 'Balloon', char: 'O', table: '/' },
+    { code: '/#', name: 'Digi', char: '#', table: '/' },
+    { code: '/=', name: 'Rail', char: '=', table: '/' },
+    { code: '/<', name: 'Motorcycle', char: '<', table: '/' },
+    { code: '/;', name: 'Camp', char: ';', table: '/' },
+    { code: '/.', name: 'X-Ray', char: '.', table: '/' }
+];
 
 // Application State
 const state = {
@@ -6,6 +25,8 @@ const state = {
     callsign: '',
     passcode: '',
     currentContact: 'APRS-IS',
+    symbol: localStorage.getItem('aprs_symbol') || '/>', // Default Car
+
     messages: loadMessages() || {
         'APRS-IS': [
             { source: 'System', content: 'Welcome to APRS Web Messenger. Connect to start messaging!', type: 'received', time: 'Now' }
@@ -45,7 +66,28 @@ const elements = {
     currentChatName: document.getElementById('current-chat-name'),
     logoutBtn: document.getElementById('logout-btn'),
     addContactBtn: document.getElementById('add-contact-btn'),
-    loginError: document.getElementById('login-error')
+    loginError: document.getElementById('login-error'),
+    // Settings
+    settingsBtn: document.getElementById('settings-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    closeSettings: document.getElementById('close-settings'),
+    saveSettings: document.getElementById('save-settings'),
+    settingsPasscode: document.getElementById('settings-passcode'),
+    settingsSymbol: document.getElementById('settings-symbol'),
+    symbolGrid: document.getElementById('symbol-grid'),
+    currentSymbolDisplay: document.getElementById('current-symbol-display'),
+    currentSymbolName: document.getElementById('current-symbol-name'),
+    // Radar
+    manualGpsBtn: document.getElementById('manual-gps-btn'),
+    radarStatus: document.querySelector('.radar-status'),
+    deleteChatBtn: document.getElementById('delete-chat-btn'),
+    // Terminal
+    terminalOutput: document.getElementById('terminal-output'),
+    toggleTerminal: document.getElementById('toggle-terminal'),
+    terminalContent: document.getElementById('terminal-content'),
+    // Mobile
+    mobileMenuBtn: document.getElementById('mobile-menu-btn'),
+    mobileRadarBtn: document.getElementById('mobile-radar-btn')
 };
 
 // Initialization
@@ -54,6 +96,24 @@ function init() {
     elements.messageForm.addEventListener('submit', handleSendMessage);
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.addContactBtn.addEventListener('click', handleAddContact);
+
+    // Settings
+    elements.settingsBtn.addEventListener('click', openSettings);
+    elements.closeSettings.addEventListener('click', closeSettings);
+    elements.saveSettings.addEventListener('click', handleSaveSettings);
+    elements.manualGpsBtn.addEventListener('click', handleManualGps);
+    elements.deleteChatBtn.addEventListener('click', handleDeleteChat);
+
+    // Terminal Toggle
+    elements.toggleTerminal.addEventListener('click', () => {
+        elements.terminalContent.classList.toggle('hidden');
+        const icon = elements.toggleTerminal.querySelector('.terminal-toggle-icon');
+        icon.style.transform = elements.terminalContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
+    });
+
+    // Mobile Toggles
+    elements.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    elements.mobileRadarBtn.addEventListener('click', toggleMobileRadar);
 
     // Enter key to send
     elements.messageInput.addEventListener('keydown', (e) => {
@@ -99,11 +159,19 @@ async function handleLogin(e) {
 function handleLogout() {
     if (state.socket) {
         state.socket.close();
+        state.socket = null;
     }
-    state.socket = null;
     elements.dashboard.classList.add('hidden');
     elements.loginOverlay.classList.remove('hidden');
+    elements.connectionStatus.classList.remove('online');
 }
+
+// Cleanup on window close
+window.addEventListener('beforeunload', () => {
+    if (state.socket) {
+        state.socket.close();
+    }
+});
 
 function handleAddContact() {
     const contact = prompt('Enter the Callsign-SSID you want to message (e.g. 9M2PJU-10):');
@@ -138,6 +206,7 @@ function handleSendMessage(e) {
 
     const packet = generateMessagePacket(state.callsign, state.currentContact, content);
     state.socket.send(packet);
+    logPacket(packet, 'send');
 
     // Update UI
     addMessageToState(state.currentContact, {
@@ -158,8 +227,11 @@ function connectWebSocket() {
 
         state.socket.onopen = () => {
             console.log('Connected to APRS-IS Gateway');
+            logPacket('Connected to APRS-IS Gateway', 'system');
+
             const loginLine = generateLoginLine(state.callsign, state.passcode);
             state.socket.send(loginLine);
+            logPacket(loginLine, 'send');
 
             // elements.loginOverlay.classList.add('hidden');
             // elements.dashboard.classList.remove('hidden');
@@ -208,11 +280,13 @@ function connectWebSocket() {
                     renderContacts();
                 }
                 console.log('RECV:', line);
+                logPacket(line, 'recv');
             });
         };
 
         state.socket.onclose = () => {
             console.log('Disconnected from APRS-IS Gateway');
+            logPacket('Disconnected from APRS-IS Gateway', 'system');
             elements.connectionStatus.classList.remove('online');
 
             // Only alert if we were expecting to be connected
@@ -286,6 +360,150 @@ function renderContacts() {
 
         elements.contactList.appendChild(li);
     });
+}
+
+// Settings Logic
+function openSettings() {
+    elements.settingsPasscode.value = state.passcode || localStorage.getItem('aprs_passcode') || '';
+    renderSymbolGrid();
+    elements.settingsModal.classList.remove('hidden');
+}
+
+function closeSettings() {
+    elements.settingsModal.classList.add('hidden');
+}
+
+function handleSaveSettings() {
+    const newPass = elements.settingsPasscode.value.trim();
+    if (newPass) {
+        state.passcode = newPass;
+        localStorage.setItem('aprs_passcode', newPass);
+    }
+
+    const newSymbol = elements.settingsSymbol.value;
+    state.symbol = newSymbol;
+    localStorage.setItem('aprs_symbol', newSymbol);
+
+    closeSettings();
+    alert('Settings Saved!');
+}
+
+function renderSymbolGrid() {
+    elements.symbolGrid.innerHTML = '';
+    APRS_SYMBOLS.forEach(sym => {
+        const el = document.createElement('div');
+        el.className = `symbol-item ${state.symbol === sym.code ? 'selected' : ''}`;
+        el.innerHTML = `
+            <span class="symbol-char">${sym.code}</span>
+            <span class="symbol-name">${sym.name}</span>
+        `;
+        el.onclick = () => selectSymbol(sym, el);
+        elements.symbolGrid.appendChild(el);
+    });
+}
+
+function selectSymbol(sym, el) {
+    state.symbol = sym.code;
+    elements.settingsSymbol.value = sym.code;
+    elements.currentSymbolDisplay.textContent = sym.code;
+    elements.currentSymbolName.textContent = sym.name;
+
+    // Visual selection update
+    document.querySelectorAll('.symbol-item').forEach(i => i.classList.remove('selected'));
+    el.classList.add('selected');
+}
+
+function handleDeleteChat() {
+    const contact = state.currentContact;
+    if (contact === 'APRS-IS') {
+        alert("You cannot delete the system channel.");
+        return;
+    }
+
+    if (confirm(`Delete conversation with ${contact}? This cannot be undone.`)) {
+        delete state.messages[contact];
+        saveMessages();
+
+        // Reset to system channel or first available
+        state.currentContact = 'APRS-IS';
+        elements.currentChatName.textContent = 'APRS-IS';
+
+        renderContacts();
+        renderMessages();
+    }
+}
+
+// GPS Logic
+function handleManualGps() {
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+        alert('Connect to APRS-IS first!');
+        return;
+    }
+
+    if (!navigator.geolocation) {
+        alert('Geolocation is not supported by this browser.');
+        return;
+    }
+
+    elements.manualGpsBtn.textContent = 'Acquiring...';
+    elements.radarStatus.textContent = 'ACQUIRING GPS...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            sendBeacon(pos.coords);
+            elements.manualGpsBtn.textContent = 'SEND GPS NOW';
+        },
+        (err) => {
+            console.error('GPS Error:', err);
+            alert('Failed to get location: ' + err.message);
+            elements.manualGpsBtn.textContent = 'SEND GPS NOW';
+            elements.radarStatus.textContent = 'GPS ERROR';
+        },
+        { enableHighAccuracy: true }
+    );
+}
+
+function sendBeacon(coords) {
+    try {
+        const packet = generatePositionPacket(
+            state.callsign,
+            coords.latitude,
+            coords.longitude,
+            state.symbol,
+            'Web Beacon'
+        );
+        state.socket.send(packet);
+        logPacket(packet, 'send');
+        console.log('BEACON SENT:', packet);
+
+        elements.radarStatus.textContent = `LAST BEACON: ${new Date().toLocaleTimeString()}`;
+        elements.radarStatus.style.color = 'var(--success-green)';
+    } catch (e) {
+        console.error('Beacon encoding failed:', e);
+        alert('Failed to encode beacon position.');
+    }
+}
+
+function toggleMobileMenu() {
+    const sidebar = document.querySelector('.sidebar');
+    const radar = document.querySelector('.radar-sidebar');
+    sidebar.classList.toggle('show-mobile');
+    radar.classList.remove('show-mobile');
+}
+
+function toggleMobileRadar() {
+    const sidebar = document.querySelector('.sidebar');
+    const radar = document.querySelector('.radar-sidebar');
+    radar.classList.toggle('show-mobile');
+    sidebar.classList.remove('show-mobile');
+}
+
+function logPacket(msg, type = 'system') {
+    const div = document.createElement('div');
+    div.className = `log-line ${type}`;
+    div.textContent = msg.trim();
+    elements.terminalOutput.appendChild(div);
+    elements.terminalOutput.scrollTop = elements.terminalOutput.scrollHeight;
 }
 
 // Start

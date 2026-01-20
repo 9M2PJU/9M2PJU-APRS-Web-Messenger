@@ -50,3 +50,43 @@ export function parsePacket(line) {
 
     return { type: 'other', raw: line };
 }
+
+/**
+ * Encodes coordinates into APRS DDMM.hh format.
+ * Latitude: DDMM.hhN (2+2.2 chars + Dir)
+ * Longitude: DDDMM.hhW (3+2.2 chars + Dir)
+ */
+function encodePosition(lat, lon) {
+    const format = (val, isLat) => {
+        const absVal = Math.abs(val);
+        const deg = Math.floor(absVal);
+        const min = (absVal - deg) * 60;
+
+        // Pad degrees: 2 digits for Lat, 3 for Lon
+        const degStr = deg.toString().padStart(isLat ? 2 : 3, '0');
+        // Pad minutes: "08.50"
+        const minStr = min.toFixed(2).padStart(5, '0');
+
+        const dir = isLat
+            ? (val >= 0 ? 'N' : 'S')
+            : (val >= 0 ? 'E' : 'W');
+
+        return `${degStr}${minStr}${dir}`;
+    };
+    return {
+        lat: format(lat, true),
+        lon: format(lon, false)
+    };
+}
+
+/**
+ * Generates an APRS position packet (Beacon).
+ * Format: SOURCE>APJUMB,TCPIP*:!LAT(Table)LON(Symbol)COMMENT
+ * Example: 9M2PJU>...>...!0310.50N/10140.20E>My Beacon
+ */
+export function generatePositionPacket(source, lat, lon, symbolCode = '/>', comment = '') {
+    const pos = encodePosition(lat, lon);
+    const table = symbolCode.charAt(0);
+    const symbol = symbolCode.charAt(1);
+    return `${source.toUpperCase()}>APJUMB,TCPIP*:!${pos.lat}${table}${pos.lon}${symbol}${comment}\r\n`;
+}
