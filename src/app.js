@@ -149,12 +149,31 @@ function connectWebSocket() {
             elements.connectionStatus.classList.add('online');
         };
 
-        state.socket.onmessage = (event) => {
-            const lines = event.data.toString().split('\n');
+        state.socket.onmessage = async (event) => {
+            let data = event.data;
+            if (data instanceof Blob) {
+                data = await data.text();
+            }
+
+            const lines = data.toString().split('\n');
             lines.forEach(line => {
                 if (!line.trim()) return;
 
                 const parsed = parsePacket(line);
+
+                // Handle Login Response
+                if (line.startsWith('# logresp')) {
+                    if (line.includes('verified')) {
+                        console.log('Login Verified');
+                        elements.loginOverlay.classList.add('hidden');
+                        elements.dashboard.classList.remove('hidden');
+                    } else {
+                        console.error('Login Failed:', line);
+                        alert('APRS-IS Login Failed: ' + line.substring(2));
+                        state.socket.close();
+                    }
+                }
+
                 if (parsed && parsed.type === 'message') {
                     addMessageToState(parsed.source, {
                         source: parsed.source,
