@@ -3,14 +3,19 @@ import { generateLoginLine, generateMessagePacket, parsePacket, APRS_CONFIG } fr
 // Application State
 const state = {
     socket: null,
-    callsign: '',
-    passcode: '',
+    callsign: localStorage.getItem('aprs_callsign') || '',
+    passcode: localStorage.getItem('aprs_passcode') || '',
+    appPassword: localStorage.getItem('aprs_app_password') || '',
     currentContact: 'APRS-IS',
     messages: loadMessages() || {
         'APRS-IS': [
-            { source: 'System', content: 'Welcome to APRS Web Messenger. Connect to start messaging!', type: 'received', time: 'Now' }
+            { source: 'System', content: 'Welcome to APRS Web Messenger. Configure your passcode in Settings to start.', type: 'received', time: 'SYSTEM' }
         ]
-    }
+    },
+    packetsReceived: 0,
+    startTime: Date.now(),
+    reconnectAt: 0,
+    beaconTimer: null
 };
 
 function loadMessages() {
@@ -45,7 +50,22 @@ const elements = {
     currentChatName: document.getElementById('current-chat-name'),
     logoutBtn: document.getElementById('logout-btn'),
     addContactBtn: document.getElementById('add-contact-btn'),
-    loginError: document.getElementById('login-error')
+    loginError: document.getElementById('login-error'),
+    settingsBtn: document.getElementById('settings-btn'),
+    settingsModal: document.getElementById('settings-modal'),
+    saveSettingsBtn: document.getElementById('save-settings'),
+    closeSettingsBtn: document.getElementById('close-settings'),
+    settingsPasscode: document.getElementById('settings-passcode'),
+    settingsAppPassword: document.getElementById('settings-app-password'),
+    settingsStatus: document.getElementById('settings-status'),
+    settingsInterval: document.getElementById('settings-interval'),
+    consoleOutput: document.getElementById('console-output'),
+    toggleConsole: document.getElementById('toggle-console'),
+    packetConsole: document.getElementById('packet-console'),
+    statUptime: document.getElementById('stat-uptime'),
+    statPackets: document.getElementById('stat-packets'),
+    clearChatBtn: document.getElementById('clear-chat-btn'),
+    macroBtns: document.querySelectorAll('.macro-btn')
 };
 
 // Initialization
@@ -54,15 +74,24 @@ function init() {
     elements.messageForm.addEventListener('submit', handleSendMessage);
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.addContactBtn.addEventListener('click', handleAddContact);
+    elements.settingsBtn.addEventListener('click', () => elements.settingsModal.classList.remove('hidden'));
+    elements.closeSettingsBtn.addEventListener('click', () => elements.settingsModal.classList.add('hidden'));
+    elements.saveSettingsBtn.addEventListener('click', handleSaveSettings);
+    elements.toggleConsole.addEventListener('click', () => elements.packetConsole.classList.toggle('collapsed'));
+    elements.clearChatBtn.addEventListener('click', handleClearChat);
 
-    // Check if we have saved credentials
-    const savedCall = localStorage.getItem('aprs_callsign');
-    const savedPass = localStorage.getItem('aprs_passcode');
-    if (savedCall && savedPass) {
-        document.getElementById('callsign').value = savedCall;
-        document.getElementById('passcode').value = savedPass;
+    elements.macroBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.messageInput.value = btn.textContent;
+            handleSendMessage({ preventDefault: () => { } });
+        });
+    });
+
+    if (state.callsign) {
+        document.getElementById('callsign').value = state.callsign;
     }
 
+    setInterval(updateStats, 1000);
     renderContacts();
     renderMessages();
 }
@@ -74,18 +103,30 @@ async function handleLogin(e) {
     elements.loginError.classList.add('hidden');
 
     const callsign = document.getElementById('callsign').value.trim().toUpperCase();
-    const passcode = document.getElementById('passcode').value.trim();
+    const password = document.getElementById('password').value.trim();
 
-    if (!callsign || !passcode) return;
+    if (!callsign || !password) return;
+
+    if (!state.appPassword) {
+        state.appPassword = password;
+        localStorage.setItem('aprs_app_password', password);
+    } else if (password !== state.appPassword) {
+        elements.loginError.textContent = 'Invalid Access Password';
+        elements.loginError.classList.remove('hidden');
+        return;
+    }
 
     state.callsign = callsign;
-    state.passcode = passcode;
-
-    // Save credentials
     localStorage.setItem('aprs_callsign', callsign);
-    localStorage.setItem('aprs_passcode', passcode);
 
-    connectWebSocket();
+    if (state.passcode) {
+        connectWebSocket();
+    } else {
+        elements.loginOverlay.classList.add('hidden');
+        elements.dashboard.classList.remove('hidden');
+        elements.settingsModal.classList.remove('hidden');
+        elements.displayCallsign.textContent = state.callsign;
+    }
 }
 
 function handleLogout() {
@@ -143,14 +184,18 @@ function connectWebSocket() {
         state.socket = new WebSocket(APRS_CONFIG.SERVER);
 
         state.socket.onopen = () => {
-            console.log('Connected to APRS-IS Gateway');
+            logToConsole('>>> CONNECTED TO APRS-IS');
             const loginLine = generateLoginLine(state.callsign, state.passcode);
             state.socket.send(loginLine);
 
-            // elements.loginOverlay.classList.add('hidden');
-            // elements.dashboard.classList.remove('hidden');
+            // Server-side filtering
+            const filterLine = `#filter pv/${state.callsign}*\r\n`;
+            state.socket.send(filterLine);
+            logToConsole(`>>> FILTER_SET: pv/${state.callsign}`);
+
             elements.displayCallsign.textContent = state.callsign;
             elements.connectionStatus.classList.add('online');
+            startBeaconing();
         };
 
         state.socket.onmessage = async (event) => {
@@ -162,26 +207,27 @@ function connectWebSocket() {
             const lines = data.toString().split('\n');
             lines.forEach(line => {
                 if (!line.trim()) return;
+                logToConsole(line);
+                state.packetsReceived++;
 
                 const parsed = parsePacket(line);
 
                 // Handle Login Response
                 if (line.startsWith('# logresp')) {
                     if (line.includes('verified')) {
-                        console.log('Login Verified');
-                        elements.loginError.textContent = '';
-                        elements.loginError.classList.add('hidden');
+                        logToConsole('>>> LOGIN_VERIFIED');
                         elements.loginOverlay.classList.add('hidden');
                         elements.dashboard.classList.remove('hidden');
                     } else {
-                        console.error('Login Failed:', line);
-                        elements.loginError.textContent = 'Login Failed: ' + line.split(' ').slice(2).join(' ');
+                        logToConsole('!!! LOGIN_FAILED');
+                        elements.loginError.textContent = 'APRS-IS Failed: ' + line.split(' ').slice(2).join(' ');
                         elements.loginError.classList.remove('hidden');
                         state.socket.close();
                     }
                 }
 
                 if (parsed && parsed.type === 'message') {
+                    playNotification();
                     addMessageToState(parsed.source, {
                         source: parsed.source,
                         content: parsed.content,
@@ -191,7 +237,6 @@ function connectWebSocket() {
                     renderMessages();
                     renderContacts();
                 }
-                console.log('RECV:', line);
             });
         };
 
@@ -224,13 +269,24 @@ function renderMessages() {
     const msgs = state.messages[state.currentContact] || [];
     elements.messageContainer.innerHTML = '';
 
-    msgs.forEach(msg => {
+    msgs.forEach((msg, index) => {
         const msgEl = document.createElement('div');
         msgEl.className = `message ${msg.type}`;
         msgEl.innerHTML = `
             <div class="msg-bubble">${msg.content}</div>
             <span class="time">${msg.time}</span>
         `;
+
+        // Context menu for deleting message
+        msgEl.oncontextmenu = (e) => {
+            e.preventDefault();
+            if (confirm('Delete this message?')) {
+                state.messages[state.currentContact].splice(index, 1);
+                saveMessages();
+                renderMessages();
+            }
+        };
+
         elements.messageContainer.appendChild(msgEl);
     });
 
@@ -250,11 +306,22 @@ function renderContacts() {
             <div class="avatar">${contact.substring(0, 2).toUpperCase()}</div>
             <div class="contact-info">
                 <span class="name">${contact}</span>
-                <span class="last-msg">${lastMsg ? lastMsg.content.substring(0, 30) : ''}</span>
+                <span class="last-msg">${lastMsg ? lastMsg.content.substring(0, 20) : '...'}</span>
             </div>
+            ${contact !== 'APRS-IS' ? '<button class="delete-contact" title="Delete Contact">×</button>' : ''}
         `;
 
-        li.onclick = () => {
+        li.onclick = (e) => {
+            if (e.target.classList.contains('delete-contact')) {
+                if (confirm(`Remove ${contact} and all history?`)) {
+                    delete state.messages[contact];
+                    saveMessages();
+                    state.currentContact = 'APRS-IS';
+                    renderContacts();
+                    renderMessages();
+                }
+                return;
+            }
             state.currentContact = contact;
             elements.currentChatName.textContent = contact;
             renderContacts();
@@ -265,5 +332,75 @@ function renderContacts() {
     });
 }
 
+// Advanced Features Support
+function logToConsole(text) {
+    const line = document.createElement('div');
+    line.className = 'monitor-line';
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+    elements.consoleOutput.appendChild(line);
+    elements.consoleOutput.scrollTop = elements.consoleOutput.scrollHeight;
+
+    // Keep console limited to 100 lines
+    while (elements.consoleOutput.children.length > 100) {
+        elements.consoleOutput.removeChild(elements.consoleOutput.firstChild);
+    }
+}
+
+function updateStats() {
+    const diff = Math.floor((Date.now() - state.startTime) / 1000);
+    const mins = Math.floor(diff / 60).toString().padStart(2, '0');
+    const secs = (diff % 60).toString().padStart(2, '0');
+    elements.statUptime.textContent = `UP ${mins}:${secs}`;
+    elements.statPackets.textContent = `PKT ${state.packetsReceived}`;
+}
+
+function handleSaveSettings() {
+    state.passcode = elements.settingsPasscode.value.trim();
+    const newAppPass = elements.settingsAppPassword.value.trim();
+    if (newAppPass) {
+        state.appPassword = newAppPass;
+        localStorage.setItem('aprs_app_password', newAppPass);
+    }
+
+    localStorage.setItem('aprs_passcode', state.passcode);
+    elements.settingsModal.classList.add('hidden');
+    alert('Settings applied locally. Reconnect to apply to server.');
+}
+
+function handleClearChat() {
+    if (confirm(`Clear all messages for ${state.currentContact}?`)) {
+        state.messages[state.currentContact] = [];
+        saveMessages();
+        renderMessages();
+    }
+}
+
+function startBeaconing() {
+    if (state.beaconTimer) clearInterval(state.beaconTimer);
+
+    // Initial beacon
+    sendBeacon();
+
+    const interval = parseInt(elements.settingsInterval.value) || 20;
+    state.beaconTimer = setInterval(sendBeacon, interval * 60000);
+}
+
+function sendBeacon() {
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
+
+    const comment = elements.settingsStatus.value || 'Online on APRS Web Messenger';
+    const beacon = `${state.callsign}>APRS,TCPIP*::AIS-ST   :${comment}\r\n`;
+    state.socket.send(beacon);
+    logToConsole('>>> BEACON_SENT');
+}
+
+function playNotification() {
+    try {
+        const audio = new Audio('https://bin.hamradio.my/beep.mp3');
+        audio.play().catch(e => console.log('Audio play blocked'));
+    } catch (e) { }
+}
+
 // Start
 init();
+

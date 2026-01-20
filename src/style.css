@@ -14,6 +14,8 @@
     --font-main: 'Inter', sans-serif;
     --font-heading: 'JetBrains Mono', monospace;
     --font-mono: 'JetBrains Mono', monospace;
+    --arch-blue: #1793d1;
+    --console-green: #00ff41;
 }
 
 * {
@@ -69,9 +71,17 @@ body {
 .login-card {
     width: 100%;
     max-width: 400px;
-    padding: 40px;
+    padding: 30px 40px;
     text-align: center;
     animation: fadeInScale 0.4s ease-out;
+}
+
+.ascii-art {
+    color: var(--arch-blue);
+    font-size: 0.6rem;
+    line-height: 1.2;
+    margin-bottom: 10px;
+    opacity: 0.8;
 }
 
 @keyframes fadeInScale {
@@ -223,8 +233,22 @@ input:focus {
 .user-info {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 15px;
     font-weight: 500;
+}
+
+.stats {
+    display: flex;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    border-right: 1px solid var(--glass-border);
+    padding-right: 15px;
+}
+
+.stats span {
+    color: var(--arch-blue);
 }
 
 .status-dot {
@@ -242,8 +266,36 @@ input:focus {
 .content-wrapper {
     flex: 1;
     display: flex;
-    gap: 20px;
+    gap: 15px;
     height: calc(100% - 80px);
+    /* Adjust based on header+console */
+    min-height: 0;
+}
+
+.header-main {
+    display: flex;
+    flex-direction: column;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-text-danger {
+    background: transparent;
+    border: none;
+    color: var(--error-red);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    cursor: pointer;
+    letter-spacing: 1px;
+    padding: 5px;
+}
+
+.btn-text-danger:hover {
+    text-decoration: underline;
+    opacity: 0.8;
 }
 
 .sidebar {
@@ -330,6 +382,23 @@ input:focus {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+}
+
+.right-panel {
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+}
+
+.panel-section h3 {
+    font-size: 0.75rem;
+    color: var(--arch-blue);
+    font-family: var(--font-mono);
+    margin-bottom: 15px;
+    letter-spacing: 2px;
 }
 
 .chat-header {
@@ -456,6 +525,212 @@ input:focus {
     border-radius: 10px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+.quick-macros {
+    padding: 10px 30px;
+    display: flex;
+    gap: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.macro-btn {
+    background: rgba(23, 147, 209, 0.1);
+    border: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+    padding: 5px 12px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.macro-btn:hover {
+    background: var(--arch-blue);
+    color: #000;
+    border-color: var(--arch-blue);
+}
+
+.radar-box {
+    height: 150px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.radar-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--arch-blue);
+    border-radius: 50%;
+    position: relative;
+}
+
+.radar-dot.ping::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    border: 1px solid var(--arch-blue);
+    border-radius: 50%;
+    animation: radar-ping 2s infinite;
+}
+
+@keyframes radar-ping {
+    0% {
+        width: 6px;
+        height: 6px;
+        opacity: 1;
+    }
+
+    100% {
+        width: 100px;
+        height: 100px;
+        opacity: 0;
+    }
+}
+
+.radar-line {
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--arch-blue), transparent);
+    animation: radar-scan 4s linear infinite;
+}
+
+@keyframes radar-scan {
+    0% {
+        top: 0;
+    }
+
+    100% {
+        top: 100%;
+    }
+}
+
+#radar-info {
+    position: absolute;
+    bottom: 10px;
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: var(--text-secondary);
+}
+
+.station-box {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 15px;
+    border-radius: 8px;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Settings Card */
+.settings-card {
+    width: 90%;
+    max-width: 500px;
+    padding: 30px;
+    animation: fadeInScale 0.3s ease-out;
+}
+
+.settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    margin: 25px 0;
+}
+
+.settings-content section h3 {
+    font-size: 0.8rem;
+    color: var(--arch-blue);
+    margin-bottom: 15px;
+    text-transform: uppercase;
+}
+
+.settings-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    padding-top: 20px;
+    border-top: 1px solid var(--glass-border);
+}
+
+.btn-icon-small {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.btn-icon-small:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--arch-blue);
+}
+
+
+/* Monitor / Console Area */
+.monitor {
+    max-height: 200px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: auto;
+}
+
+.monitor.collapsed {
+    max-height: 40px;
+}
+
+.monitor-header {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+}
+
+#toggle-console {
+    background: rgba(23, 147, 209, 0.1);
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.6rem;
+    font-family: var(--font-mono);
+}
+
+.monitor-content {
+    flex: 1;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 10px 20px;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--console-green);
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.monitor-line {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    padding: 2px 0;
 }
