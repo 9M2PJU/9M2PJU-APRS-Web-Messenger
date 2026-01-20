@@ -55,6 +55,14 @@ function init() {
     elements.logoutBtn.addEventListener('click', handleLogout);
     elements.addContactBtn.addEventListener('click', handleAddContact);
 
+    // Enter key to send
+    elements.messageInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage(e);
+        }
+    });
+
     // Check if we have saved credentials
     const savedCall = localStorage.getItem('aprs_callsign');
     const savedPass = localStorage.getItem('aprs_passcode');
@@ -118,9 +126,15 @@ function handleAddContact() {
 }
 
 function handleSendMessage(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const content = elements.messageInput.value.trim();
-    if (!content || !state.socket || state.socket.readyState !== WebSocket.OPEN) return;
+
+    if (!content) return;
+
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+        alert('Cannot send: Not connected to APRS-IS.');
+        return;
+    }
 
     const packet = generateMessagePacket(state.callsign, state.currentContact, content);
     state.socket.send(packet);
@@ -166,8 +180,9 @@ function connectWebSocket() {
                 const parsed = parsePacket(line);
 
                 // Handle Login Response
+                // Handle Login Response
                 if (line.startsWith('# logresp')) {
-                    if (line.includes('verified')) {
+                    if (line.includes(' verified') && !line.includes('unverified')) {
                         console.log('Login Verified');
                         elements.loginError.textContent = '';
                         elements.loginError.classList.add('hidden');
@@ -178,6 +193,7 @@ function connectWebSocket() {
                         elements.loginError.textContent = 'Login Failed: ' + line.split(' ').slice(2).join(' ');
                         elements.loginError.classList.remove('hidden');
                         state.socket.close();
+                        alert('Login failed: ' + line); // Explicit user feedback
                     }
                 }
 
@@ -198,12 +214,19 @@ function connectWebSocket() {
         state.socket.onclose = () => {
             console.log('Disconnected from APRS-IS Gateway');
             elements.connectionStatus.classList.remove('online');
-            // Auto-reconnect or show error?
+
+            // Only alert if we were expecting to be connected
+            if (!elements.loginOverlay.classList.contains('hidden')) {
+                // If we are still on the login screen, it's a failed connection attempt
+                // But usually onerror catches the initial fail. 
+                // This catches immediate disconnects after open.
+            }
         };
 
         state.socket.onerror = (err) => {
             console.error('WebSocket Error:', err);
-            alert('Failed to connect to APRS-IS. Please check your connection or server status.');
+            alert('Unable to connect to APRS-IS Server (wss://ametx.com:8888). Check your internet or firewall.');
+            elements.connectionStatus.classList.remove('online');
         };
 
     } catch (error) {
