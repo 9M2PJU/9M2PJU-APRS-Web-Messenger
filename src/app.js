@@ -1,4 +1,4 @@
-import { generateLoginLine, generateMessagePacket, parsePacket, APRS_CONFIG } from './aprs.js';
+import { generateLoginLine, generateMessagePacket, generatePositionPacket, parsePacket, APRS_CONFIG } from './aprs.js';
 
 // Application State
 const state = {
@@ -15,7 +15,9 @@ const state = {
     packetsReceived: 0,
     startTime: Date.now(),
     reconnectAt: 0,
-    beaconTimer: null
+    beaconTimer: null,
+    lastPos: null,
+    gpsWatchId: null
 };
 
 function loadMessages() {
@@ -65,7 +67,8 @@ const elements = {
     statUptime: document.getElementById('stat-uptime'),
     statPackets: document.getElementById('stat-packets'),
     clearChatBtn: document.getElementById('clear-chat-btn'),
-    macroBtns: document.querySelectorAll('.macro-btn')
+    macroBtns: document.querySelectorAll('.macro-btn'),
+    radarInfo: document.getElementById('radar-info')
 };
 
 // Initialization
@@ -92,6 +95,7 @@ function init() {
     }
 
     setInterval(updateStats, 1000);
+    startGpsTracking();
     renderContacts();
     renderMessages();
 }
@@ -133,7 +137,10 @@ function handleLogout() {
     if (state.socket) {
         state.socket.close();
     }
-    state.socket = null;
+    if (state.gpsWatchId) {
+        navigator.geolocation.clearWatch(state.gpsWatchId);
+        state.gpsWatchId = null;
+    }
     elements.dashboard.classList.add('hidden');
     elements.loginOverlay.classList.remove('hidden');
 }
@@ -389,9 +396,17 @@ function sendBeacon() {
     if (!state.socket || state.socket.readyState !== WebSocket.OPEN) return;
 
     const comment = elements.settingsStatus.value || 'Online on APRS Web Messenger';
-    const beacon = `${state.callsign}>APRS,TCPIP*::AIS-ST   :${comment}\r\n`;
-    state.socket.send(beacon);
-    logToConsole('>>> BEACON_SENT');
+    let packet;
+
+    if (state.lastPos) {
+        packet = generatePositionPacket(state.callsign, state.lastPos.lat, state.lastPos.lon, comment);
+        logToConsole(`>>> POSITION_SENT: ${state.lastPos.lat.toFixed(4)}, ${state.lastPos.lon.toFixed(4)}`);
+    } else {
+        packet = `${state.callsign}>APJUMB,TCPIP*::AIS-ST   :${comment}\r\n`;
+        logToConsole('>>> BEACON_SENT (Status Only)');
+    }
+
+    state.socket.send(packet);
 }
 
 function playNotification() {
@@ -399,6 +414,28 @@ function playNotification() {
         const audio = new Audio('https://bin.hamradio.my/beep.mp3');
         audio.play().catch(e => console.log('Audio play blocked'));
     } catch (e) { }
+}
+
+function startGpsTracking() {
+    if ("geolocation" in navigator) {
+        state.gpsWatchId = navigator.geolocation.watchPosition(
+            (position) => {
+                state.lastPos = {
+                    lat: position.coords.latitude,
+                    lon: position.coords.longitude
+                };
+                elements.radarInfo.textContent = `GPS_LOCK: ${state.lastPos.lat.toFixed(4)}, ${state.lastPos.lon.toFixed(4)}`;
+                logToConsole(`>>> GPS_UPDATED: ${state.lastPos.lat.toFixed(4)}, ${state.lastPos.lon.toFixed(4)}`);
+            },
+            (error) => {
+                console.error("Geolocation error:", error);
+                elements.radarInfo.textContent = "GPS_ERROR: " + error.message;
+            },
+            { enableHighAccuracy: true }
+        );
+    } else {
+        elements.radarInfo.textContent = "GPS_UNSUPPORTED";
+    }
 }
 
 // Start

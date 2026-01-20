@@ -50,3 +50,34 @@ export function parsePacket(line) {
 
     return { type: 'other', raw: line };
 }
+
+/**
+ * Encodes decimal coordinates to APRS format (DDMM.hhN / DDDMM.hhE)
+ */
+export function encodePosition(lat, lon) {
+    const latDir = lat >= 0 ? 'N' : 'S';
+    const latAbs = Math.abs(lat);
+    const latDeg = Math.floor(latAbs);
+    const latMin = ((latAbs - latDeg) * 60).toFixed(2).padStart(5, '0');
+    const latPadded = latDeg.toString().padStart(2, '0') + latMin + latDir;
+
+    const lonDir = lon >= 0 ? 'E' : 'W';
+    const lonAbs = Math.abs(lon);
+    const lonDeg = Math.floor(lonAbs);
+    const lonMin = ((lonAbs - lonDeg) * 60).toFixed(2).padStart(5, '0');
+    const lonPadded = lonDeg.toString().padStart(3, '0') + lonMin + lonDir;
+
+    return { lat: latPadded, lon: lonPadded };
+}
+
+/**
+ * Generates an APRS position packet (lat/lon + comment)
+ * Format: SOURCE>APRS,TCPIP*:!LAT/LON[COMMENT
+ * ! = No messaging capability (in this specific format)
+ * / = Table / (primary)
+ * [ = Symbol [ (usually a jogger/web symbol)
+ */
+export function generatePositionPacket(source, lat, lon, comment) {
+    const pos = encodePosition(lat, lon);
+    return `${source.toUpperCase()}>APJUMB,TCPIP*:!${pos.lat}/${pos.lon}[${comment}\r\n`;
+}
