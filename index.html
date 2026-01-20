@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>9M2PJU APRS Web Messenger</title>
+    <meta name="description"
+        content="A premium, glassmorphism APRS web messenger for sending and receiving messages via APRS-IS.">
+    <link rel="stylesheet" href="src/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@400;600;700;900&family=Outfit:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+</head>
+
+<body>
+    <div id="app">
+        <!-- Login Overlay -->
+        <div id="login-overlay" class="overlay">
+            <div class="glass-card login-card">
+                <h1>APRS Messenger</h1>
+                <p class="subtitle">Enter your credentials to connect</p>
+                <form id="login-form">
+                    <div class="input-group">
+                        <label for="callsign">Callsign</label>
+                        <input type="text" id="callsign" placeholder="e.g. 9M2PJU-1" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="passcode">Passcode</label>
+                        <input type="password" id="passcode" placeholder="Your APRS-IS Passcode" required>
+                    </div>
+                    <button type="submit" class="btn-primary">Connect</button>
+                    <p class="help-text">Need a passcode? <a href="https://apps.magicbug.co.uk/passcode/"
+                            target="_blank">Generate one here</a></p>
+                </form>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <main id="dashboard" class="hidden">
+            <header class="glass-nav">
+                <div class="logo">
+                    <span class="logo-text">APRS <span class="accent">Messenger</span></span>
+                </div>
+                <div class="user-info">
+                    <span id="display-callsign">9M2PJU-1</span>
+                    <span id="connection-status" class="status-dot"></span>
+                </div>
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+            </header>
+
+            <div class="content-wrapper">
+                <aside class="sidebar glass-card">
+                    <div class="sidebar-header">
+                        <h2>Contacts</h2>
+                        <button id="add-contact-btn" title="Add Contact">+</button>
+                    </div>
+                    <ul id="contact-list">
+                        <!-- Contacts go here -->
+                        <li class="contact active" data-callsign="APRS-IS">
+                            <div class="avatar">IS</div>
+                            <div class="contact-info">
+                                <span class="name">APRS-IS</span>
+                                <span class="last-msg">Server Info</span>
+                            </div>
+                        </li>
+                    </ul>
+                </aside>
+
+                <section class="chat-area glass-card">
+                    <div class="chat-header">
+                        <h2 id="current-chat-name">APRS-IS</h2>
+                        <span class="status">Gateway Active</span>
+                    </div>
+                    <div id="message-container" class="messages">
+                        <!-- Messages go here -->
+                        <div class="message received">
+                            <div class="msg-bubble">Welcome to APRS Web Messenger. Connect to start messaging!</div>
+                            <span class="time">System</span>
+                        </div>
+                    </div>
+                    <form id="message-form" class="chat-input-area">
+                        <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off">
+                        <button type="submit" id="send-btn" class="btn-icon">
+                            <svg viewBox="0 0 24 24" width="24" height="24">
+                                <path fill="currentColor" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="src/aprs.js" type="module"></script>
+    <script src="src/app.js" type="module"></script>
+</body>
+
+</html>
