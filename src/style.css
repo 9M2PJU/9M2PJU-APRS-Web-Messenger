@@ -783,3 +783,15 @@ input:focus {
         border-right: none;
     }
 }
+
+/* Map Modal */
+.map-card {
+    width: 90%;
+    max-width: 800px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Fix leaflet z-index issue with modal if needed, though glass-card usually handles it well. 
+   Leaflet uses high z-indexes. */

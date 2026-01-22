@@ -115,6 +115,11 @@ function init() {
     elements.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
     elements.mobileRadarBtn.addEventListener('click', toggleMobileRadar);
 
+    // Map Events
+    document.getElementById('map-select-btn').addEventListener('click', openMapModal);
+    document.getElementById('close-map').addEventListener('click', closeMapModal);
+    document.getElementById('confirm-location-btn').addEventListener('click', sendMapBeacon);
+
     // Enter key to send
     elements.messageInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -130,9 +135,72 @@ function init() {
         document.getElementById('callsign').value = savedCall;
         document.getElementById('passcode').value = savedPass;
     }
+    
+    // Default Terminal Visible
+    elements.terminalContent.classList.remove('hidden');
+    elements.toggleTerminal.querySelector('.terminal-toggle-icon').style.transform = 'rotate(180deg)';
 
     renderContacts();
     renderMessages();
+}
+
+// Map Logic
+let map = null;
+let currentMarker = null;
+let selectedCoords = null;
+
+function openMapModal() {
+    document.getElementById('map-modal').classList.remove('hidden');
+    
+    if (!map) {
+        // Initialize Map
+        map = L.map('map').setView([3.1390, 101.6869], 10); // Default to KL
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        map.on('click', onMapClick);
+    }
+    
+    // Invalidate size to ensure it renders correctly after being hidden
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+}
+
+function closeMapModal() {
+    document.getElementById('map-modal').classList.add('hidden');
+}
+
+function onMapClick(e) {
+    if (currentMarker) {
+        map.removeLayer(currentMarker);
+    }
+
+    currentMarker = L.marker(e.latlng).addTo(map);
+    selectedCoords = e.latlng;
+    
+    document.getElementById('selected-coords').textContent = 
+        `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
+    document.getElementById('confirm-location-btn').disabled = false;
+}
+
+function sendMapBeacon() {
+    if (!selectedCoords) return;
+    
+    if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+        alert('Connect to APRS-IS first!');
+        return;
+    }
+    
+    const coords = {
+        latitude: selectedCoords.lat,
+        longitude: selectedCoords.lng
+    };
+    
+    sendBeacon(coords);
+    closeMapModal();
 }
 
 // Event Handlers
