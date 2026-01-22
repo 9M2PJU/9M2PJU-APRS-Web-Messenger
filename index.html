@@ -44,7 +44,7 @@
         <main id="dashboard" class="hidden">
             <header class="glass-nav">
                 <div class="logo">
-                    <img src="assets/brand-logo.png" alt="9M2PJU Web APRS Messenger" class="nav-logo">
+                    <span class="logo-text">9M2PJU Web APRS <span class="accent">Messenger</span></span>
                 </div>
                 <div class="user-info">
                     <button id="mobile-menu-btn" class="icon-btn mobile-only" title="Contacts">
@@ -186,6 +186,19 @@
                     <div class="input-group">
                         <label>Beacon Interval (min)</label>
                         <input type="number" id="settings-beacon-interval" placeholder="20" min="1" value="20">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Custom Symbol Code (Optional)</label>
+                        <input type="text" id="custom-symbol-input" placeholder="e.g. />, /b, \-" maxlength="2">
+                        <small style="color: var(--text-secondary); font-size: 0.75rem;">Enter 2-character APRS symbol
+                            code or select from grid below</small>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Beacon Status Comment</label>
+                        <input type="text" id="beacon-comment-input" placeholder="9M2PJU Web APRS Messenger beacon"
+                            maxlength="43">
                     </div>
 
                     <div class="symbol-grid-container">

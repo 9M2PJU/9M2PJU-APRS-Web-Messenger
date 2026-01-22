@@ -28,6 +28,7 @@ const state = {
     symbol: localStorage.getItem('aprs_symbol') || '/>', // Default Car
     beaconInterval: parseInt(localStorage.getItem('aprs_beacon_interval')) || 20, // Default 20 mins
     beaconTimer: null,
+    beaconComment: localStorage.getItem('aprs_beacon_comment') || '9M2PJU Web APRS Messenger beacon',
 
     messages: loadMessages() || {
         'APRS-IS': [
@@ -77,6 +78,8 @@ const elements = {
     settingsPasscode: document.getElementById('settings-passcode'),
     settingsSymbol: document.getElementById('settings-symbol'),
     settingsBeaconInterval: document.getElementById('settings-beacon-interval'),
+    customSymbolInput: document.getElementById('custom-symbol-input'),
+    beaconCommentInput: document.getElementById('beacon-comment-input'),
     symbolGrid: document.getElementById('symbol-grid'),
     currentSymbolDisplay: document.getElementById('current-symbol-display'),
     currentSymbolName: document.getElementById('current-symbol-name'),
@@ -445,6 +448,8 @@ function renderContacts() {
 function openSettings() {
     elements.settingsPasscode.value = state.passcode || localStorage.getItem('aprs_passcode') || '';
     elements.settingsBeaconInterval.value = state.beaconInterval;
+    elements.customSymbolInput.value = state.symbol;
+    elements.beaconCommentInput.value = state.beaconComment;
     renderSymbolGrid();
     elements.settingsModal.classList.remove('hidden');
 }
@@ -460,9 +465,23 @@ function handleSaveSettings() {
         localStorage.setItem('aprs_passcode', newPass);
     }
 
-    const newSymbol = elements.settingsSymbol.value;
-    state.symbol = newSymbol;
-    localStorage.setItem('aprs_symbol', newSymbol);
+    // Check custom symbol input first, fall back to grid selection
+    const customSymbol = elements.customSymbolInput.value.trim();
+    if (customSymbol && customSymbol.length === 2) {
+        state.symbol = customSymbol;
+        elements.settingsSymbol.value = customSymbol;
+    } else {
+        const newSymbol = elements.settingsSymbol.value;
+        state.symbol = newSymbol;
+    }
+    localStorage.setItem('aprs_symbol', state.symbol);
+
+    // Save beacon comment
+    const newComment = elements.beaconCommentInput.value.trim();
+    if (newComment) {
+        state.beaconComment = newComment;
+        localStorage.setItem('aprs_beacon_comment', newComment);
+    }
 
     const newInterval = parseInt(elements.settingsBeaconInterval.value);
     if (newInterval && newInterval > 0) {
@@ -492,6 +511,7 @@ function renderSymbolGrid() {
 function selectSymbol(sym, el) {
     state.symbol = sym.code;
     elements.settingsSymbol.value = sym.code;
+    elements.customSymbolInput.value = sym.code;
     elements.currentSymbolDisplay.textContent = sym.code;
     elements.currentSymbolName.textContent = sym.name;
 
@@ -591,7 +611,7 @@ function sendBeacon(coords) {
             coords.latitude,
             coords.longitude,
             state.symbol,
-            '9M2PJU Web APRS Messenger beacon'
+            state.beaconComment
         );
         state.socket.send(packet);
         logPacket(packet, 'send');
