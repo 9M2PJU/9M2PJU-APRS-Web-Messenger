@@ -817,12 +817,12 @@ body.terminal-open .terminal-content {
 
 /* Brand Logo Styles */
 .login-logo {
-    max-width: 180px;
+    width: 100%;
+    max-width: 280px;
     height: auto;
-    margin-bottom: 20px;
+    margin: 0 auto 20px auto;
     display: block;
-    margin-left: auto;
-    margin-right: auto;
+    object-fit: contain;
 }
 
 .nav-logo {
