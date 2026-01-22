@@ -29,6 +29,8 @@ const state = {
     beaconInterval: parseInt(localStorage.getItem('aprs_beacon_interval')) || 20, // Default 20 mins
     beaconTimer: null,
     beaconComment: localStorage.getItem('aprs_beacon_comment') || '9M2PJU Web APRS Messenger beacon',
+    messagesSent: parseInt(localStorage.getItem('aprs_msgs_sent')) || 0,
+    messagesReceived: parseInt(localStorage.getItem('aprs_msgs_received')) || 0,
 
     messages: loadMessages() || {
         'APRS-IS': [
@@ -95,7 +97,11 @@ const elements = {
     // Mobile
     showTerminalBtn: document.getElementById('show-terminal-btn'),
     mobileMenuBtn: document.getElementById('mobile-menu-btn'),
-    mobileRadarBtn: document.getElementById('mobile-radar-btn')
+    mobileRadarBtn: document.getElementById('mobile-radar-btn'),
+    // Telemetry
+    msgSentCount: document.getElementById('msg-sent-count'),
+    msgReceivedCount: document.getElementById('msg-received-count'),
+    toastContainer: document.getElementById('toast-container')
 };
 
 // Initialization
@@ -156,6 +162,7 @@ function init() {
     renderContacts();
     renderMessages();
     startBeaconTimer();
+    updateTelemetry();
 }
 
 // Map Logic
@@ -358,6 +365,10 @@ function connectWebSocket() {
                         type: 'received',
                         time: parsed.timestamp
                     });
+                    state.messagesReceived++;
+                    localStorage.setItem('aprs_msgs_received', state.messagesReceived);
+                    updateTelemetry();
+                    showToast(`New message from ${parsed.source}`, 'info');
                     renderMessages();
                     renderContacts();
                 }
@@ -491,7 +502,7 @@ function handleSaveSettings() {
     }
 
     closeSettings();
-    alert('Settings Saved!');
+    showToast('Settings Saved Successfully!', 'success');
 }
 
 function renderSymbolGrid() {
@@ -523,7 +534,7 @@ function selectSymbol(sym, el) {
 function handleDeleteChat() {
     const contact = state.currentContact;
     if (contact === 'APRS-IS') {
-        alert("You cannot delete the system channel.");
+        showToast("You cannot delete the system channel.", 'error');
         return;
     }
 
@@ -577,12 +588,12 @@ function startBeaconTimer() {
 // GPS Logic
 function handleManualGps() {
     if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
-        alert('Connect to APRS-IS first!');
+        showToast('Connect to APRS-IS first!', 'error');
         return;
     }
 
     if (!navigator.geolocation) {
-        alert('Geolocation is not supported by this browser.');
+        showToast('Geolocation is not supported by this browser.', 'error');
         return;
     }
 
@@ -596,7 +607,7 @@ function handleManualGps() {
         },
         (err) => {
             console.error('GPS Error:', err);
-            alert('Failed to get location: ' + err.message);
+            showToast('Failed to get location: ' + err.message, 'error');
             elements.manualGpsBtn.textContent = 'SEND GPS NOW';
             elements.radarStatus.textContent = 'GPS ERROR';
         },
@@ -645,6 +656,27 @@ function logPacket(msg, type = 'system') {
     div.textContent = msg.trim();
     elements.terminalOutput.appendChild(div);
     elements.terminalOutput.scrollTop = elements.terminalOutput.scrollHeight;
+}
+
+// Toast Notification System
+function showToast(message, type = 'info', duration = 3000) {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.textContent = message;
+    toast.onclick = () => toast.remove();
+
+    elements.toastContainer.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// Update Telemetry Display
+function updateTelemetry() {
+    elements.msgSentCount.textContent = state.messagesSent;
+    elements.msgReceivedCount.textContent = state.messagesReceived;
 }
 
 // Start

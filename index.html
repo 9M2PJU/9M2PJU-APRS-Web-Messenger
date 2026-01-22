@@ -151,9 +151,10 @@
                         </div>
 
                         <div class="station-info">
-                            <h3>Station Log</h3>
+                            <h3>Telemetry</h3>
                             <ul id="station-log">
-                                <li>Select a contact to view telemetry</li>
+                                <li>📤 Sent: <span id="msg-sent-count">0</span></li>
+                                <li>📥 Received: <span id="msg-received-count">0</span></li>
                             </ul>
                         </div>
                     </div>
@@ -253,6 +254,9 @@
         </div>
     </footer>
     </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
 
     <script src="src/aprs.js" type="module"></script>
     <script src="src/app.js" type="module"></script>

@@ -892,3 +892,78 @@ body.terminal-open .terminal-content {
 body.terminal-open .app-footer {
     display: none;
 }
+
+/* Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 60px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 350px;
+}
+
+.toast {
+    padding: 15px 20px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 10px;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    animation: slideInRight 0.3s ease-out;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.toast:hover {
+    transform: translateX(-5px);
+    opacity: 0.9;
+}
+
+.toast.success {
+    border-left: 4px solid var(--success-green);
+}
+
+.toast.error {
+    border-left: 4px solid var(--error-red);
+}
+
+.toast.info {
+    border-left: 4px solid var(--accent-color);
+}
+
+.toast.warning {
+    border-left: 4px solid #ffa500;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.toast.hiding {
+    animation: slideOutRight 0.3s ease-in forwards;
+}
