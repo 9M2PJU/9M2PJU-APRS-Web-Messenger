@@ -294,19 +294,27 @@ function handleSendMessage(e) {
     }
 
     const packet = generateMessagePacket(state.callsign, state.currentContact, content);
-    state.socket.send(packet);
-    logPacket(packet, 'send');
+    // Send to APRS-IS
+    if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+        state.socket.send(packet);
+        logPacket(packet, 'send');
 
-    // Update UI
-    addMessageToState(state.currentContact, {
-        source: state.callsign,
-        content: content,
-        type: 'sent',
-        time: new Date().toLocaleTimeString()
-    });
+        // Update Telemetry
+        state.messagesSent++;
+        localStorage.setItem('aprs_msgs_sent', state.messagesSent);
+        updateTelemetry();
 
-    elements.messageInput.value = '';
-    renderMessages();
+        // Add to local state
+        addMessageToState(state.currentContact, {
+            source: state.callsign,
+            content: content,
+            type: 'sent',
+            time: new Date().toLocaleTimeString()
+        });
+
+        elements.messageInput.value = '';
+        renderMessages();
+    }
 }
 
 // WebSocket Logic
