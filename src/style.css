@@ -844,54 +844,7 @@ body.terminal-open .terminal-content {
     object-fit: contain;
 }
 
-/* App Footer */
-.app-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    padding: 10px 20px;
-    background: rgba(23, 29, 32, 0.95);
-    border-top: 1px solid var(--glass-border);
-    text-align: center;
-    font-size: 0.8rem;
-    color: var(--text-secondary);
-    z-index: 50;
-    backdrop-filter: blur(10px);
-    display: none;
-    /* Hidden by default (on login screen) */
-}
 
-/* Show footer only when dashboard is visible */
-#dashboard:not(.hidden)~.app-footer {
-    display: block;
-}
-
-.app-footer p {
-    margin: 0;
-}
-
-.app-footer a {
-    color: var(--accent-color);
-    text-decoration: none;
-    transition: color 0.2s;
-    font-weight: 600;
-}
-
-.app-footer a:hover {
-    color: #2bb3ff;
-    text-decoration: underline;
-}
-
-/* Adjust main content area to account for footer */
-#dashboard {
-    padding-bottom: 40px;
-}
-
-/* Hide footer when terminal is visible to avoid overlap */
-body.terminal-open .app-footer {
-    display: none;
-}
 
 /* Toast Notifications */
 .toast-container {
