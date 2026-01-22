@@ -26,6 +26,8 @@ const state = {
     passcode: '',
     currentContact: 'APRS-IS',
     symbol: localStorage.getItem('aprs_symbol') || '/>', // Default Car
+    beaconInterval: parseInt(localStorage.getItem('aprs_beacon_interval')) || 20, // Default 20 mins
+    beaconTimer: null,
 
     messages: loadMessages() || {
         'APRS-IS': [
@@ -74,6 +76,7 @@ const elements = {
     saveSettings: document.getElementById('save-settings'),
     settingsPasscode: document.getElementById('settings-passcode'),
     settingsSymbol: document.getElementById('settings-symbol'),
+    settingsBeaconInterval: document.getElementById('settings-beacon-interval'),
     symbolGrid: document.getElementById('symbol-grid'),
     currentSymbolDisplay: document.getElementById('current-symbol-display'),
     currentSymbolName: document.getElementById('current-symbol-name'),
@@ -144,6 +147,7 @@ function init() {
 
     renderContacts();
     renderMessages();
+    startBeaconTimer();
 }
 
 // Map Logic
@@ -435,6 +439,7 @@ function renderContacts() {
 // Settings Logic
 function openSettings() {
     elements.settingsPasscode.value = state.passcode || localStorage.getItem('aprs_passcode') || '';
+    elements.settingsBeaconInterval.value = state.beaconInterval;
     renderSymbolGrid();
     elements.settingsModal.classList.remove('hidden');
 }
@@ -453,6 +458,13 @@ function handleSaveSettings() {
     const newSymbol = elements.settingsSymbol.value;
     state.symbol = newSymbol;
     localStorage.setItem('aprs_symbol', newSymbol);
+
+    const newInterval = parseInt(elements.settingsBeaconInterval.value);
+    if (newInterval && newInterval > 0) {
+        state.beaconInterval = newInterval;
+        localStorage.setItem('aprs_beacon_interval', newInterval);
+        startBeaconTimer();
+    }
 
     closeSettings();
     alert('Settings Saved!');
@@ -501,6 +513,40 @@ function handleDeleteChat() {
         renderContacts();
         renderMessages();
     }
+}
+
+function startBeaconTimer() {
+    if (state.beaconTimer) {
+        clearInterval(state.beaconTimer);
+    }
+
+    console.log(`Starting Beacon Timer: ${state.beaconInterval} mins`);
+
+    state.beaconTimer = setInterval(() => {
+        if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
+            console.log('Skipping auto-beacon: Not connected');
+            return;
+        }
+
+        // Use last known selectedCoords or try to get GPS
+        if (selectedCoords) {
+            const coords = {
+                latitude: selectedCoords.lat,
+                longitude: selectedCoords.lng
+            };
+            sendBeacon(coords);
+        } else if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    sendBeacon(pos.coords);
+                },
+                (err) => {
+                    console.error('Auto-beacon GPS failed:', err);
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+    }, state.beaconInterval * 60 * 1000);
 }
 
 // GPS Logic
