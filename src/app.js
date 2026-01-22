@@ -137,10 +137,10 @@ function init() {
         document.getElementById('passcode').value = savedPass;
     }
 
-    // Default Terminal Visible
-    elements.terminalContent.classList.remove('hidden');
-    document.body.classList.add('terminal-open');
-    elements.toggleTerminal.querySelector('.terminal-toggle-icon').style.transform = 'rotate(180deg)';
+    // Default Terminal Closed
+    // elements.terminalContent.classList.remove('hidden');
+    // document.body.classList.add('terminal-open');
+    // elements.toggleTerminal.querySelector('.terminal-toggle-icon').style.transform = 'rotate(180deg)';
 
     renderContacts();
     renderMessages();
