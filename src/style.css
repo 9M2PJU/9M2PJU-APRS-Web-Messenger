@@ -826,6 +826,8 @@ body.terminal-open .terminal-content {
 }
 
 .nav-logo {
-    height: 40px;
+    height: 45px;
     width: auto;
+    max-width: 250px;
+    object-fit: contain;
 }
