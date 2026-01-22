@@ -85,10 +85,12 @@ const elements = {
     radarStatus: document.querySelector('.radar-status'),
     deleteChatBtn: document.getElementById('delete-chat-btn'),
     // Terminal
+    terminalFooter: document.getElementById('terminal-footer'),
     terminalOutput: document.getElementById('terminal-output'),
     toggleTerminal: document.getElementById('toggle-terminal'),
     terminalContent: document.getElementById('terminal-content'),
     // Mobile
+    showTerminalBtn: document.getElementById('show-terminal-btn'),
     mobileMenuBtn: document.getElementById('mobile-menu-btn'),
     mobileRadarBtn: document.getElementById('mobile-radar-btn')
 };
@@ -116,6 +118,9 @@ function init() {
     });
 
     // Mobile Toggles
+    elements.showTerminalBtn.addEventListener('click', () => {
+        elements.terminalFooter.classList.toggle('hidden');
+    });
     elements.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
     elements.mobileRadarBtn.addEventListener('click', toggleMobileRadar);
 
