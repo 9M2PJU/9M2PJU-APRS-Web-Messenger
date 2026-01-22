@@ -540,7 +540,7 @@ function sendBeacon(coords) {
             coords.latitude,
             coords.longitude,
             state.symbol,
-            'Web Beacon'
+            '9M2PJU Web APRS Messenger beacon'
         );
         state.socket.send(packet);
         logPacket(packet, 'send');
