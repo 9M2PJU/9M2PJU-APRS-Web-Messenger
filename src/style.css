@@ -68,8 +68,8 @@ body {
 
 .login-card {
     width: 100%;
-    max-width: 360px;
-    padding: 30px;
+    max-width: 420px;
+    padding: 50px 40px;
     text-align: center;
     animation: fadeInScale 0.4s ease-out;
 }
@@ -84,6 +84,18 @@ body {
         opacity: 1;
         transform: scale(1);
     }
+}
+
+.login-card h1 {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.login-card .subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 25px;
 }
 
 h1 {
@@ -838,14 +850,21 @@ body.terminal-open .terminal-content {
     bottom: 0;
     left: 0;
     right: 0;
-    padding: 8px 20px;
+    padding: 10px 20px;
     background: rgba(23, 29, 32, 0.95);
     border-top: 1px solid var(--glass-border);
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     z-index: 50;
     backdrop-filter: blur(10px);
+    display: none;
+    /* Hidden by default (on login screen) */
+}
+
+/* Show footer only when dashboard is visible */
+#dashboard:not(.hidden)~.app-footer {
+    display: block;
 }
 
 .app-footer p {
@@ -856,6 +875,7 @@ body.terminal-open .terminal-content {
     color: var(--accent-color);
     text-decoration: none;
     transition: color 0.2s;
+    font-weight: 600;
 }
 
 .app-footer a:hover {
@@ -865,7 +885,7 @@ body.terminal-open .terminal-content {
 
 /* Adjust main content area to account for footer */
 #dashboard {
-    padding-bottom: 35px;
+    padding-bottom: 40px;
 }
 
 /* Hide footer when terminal is visible to avoid overlap */
