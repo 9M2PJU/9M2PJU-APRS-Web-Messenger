@@ -5,7 +5,7 @@
 
 export const APRS_CONFIG = {
     SERVER: 'wss://ametx.com:8888',
-    SOFTWARE_NAME: '9M2PJU-WebMessenger',
+    SOFTWARE_NAME: '9M2PJU-Web-APRS-Messenger',
     VERSION: '1.0.0'
 };
 

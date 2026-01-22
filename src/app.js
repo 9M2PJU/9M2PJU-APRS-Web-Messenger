@@ -31,7 +31,7 @@ const state = {
 
     messages: loadMessages() || {
         'APRS-IS': [
-            { source: 'System', content: 'Welcome to APRS Web Messenger. Connect to start messaging!', type: 'received', time: 'Now' }
+            { source: 'System', content: 'Welcome to 9M2PJU Web APRS Messenger. Connect to start messaging!', type: 'received', time: 'Now' }
         ]
     }
 };
