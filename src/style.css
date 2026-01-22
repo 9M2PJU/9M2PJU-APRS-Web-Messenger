@@ -812,4 +812,14 @@ body.terminal-open #terminal-footer {
 
 body.terminal-open .terminal-content {
     height: 220px;
+}/* Brand Logo Styles */
+.login-logo {
+    max-width: 250px;
+    height: auto;
+    margin-bottom: 20px;
+}
+
+.nav-logo {
+    height: 40px;
+    width: auto;
 }
