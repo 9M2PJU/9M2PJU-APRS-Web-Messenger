@@ -794,4 +794,22 @@ input:focus {
 }
 
 /* Fix leaflet z-index issue with modal if needed, though glass-card usually handles it well. 
-   Leaflet uses high z-indexes. */
+   Leaflet uses high z-indexes. *//* Adjust dashboard when terminal is open */
+body.terminal-open #dashboard {
+    height: calc(100vh - 280px);
+    /* 100vh - (Terminal Height + Top/Bottom adjustments) */
+    position: absolute;
+    top: 0;
+    margin-top: 20px;
+    width: 95%;
+}
+
+/* Ensure raw terminal stays at bottom */
+body.terminal-open #terminal-footer {
+    height: 250px;
+    /* Explicit height when open */
+}
+
+body.terminal-open .terminal-content {
+    height: 220px;
+}

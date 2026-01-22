@@ -107,6 +107,7 @@ function init() {
     // Terminal Toggle
     elements.toggleTerminal.addEventListener('click', () => {
         elements.terminalContent.classList.toggle('hidden');
+        document.body.classList.toggle('terminal-open');
         const icon = elements.toggleTerminal.querySelector('.terminal-toggle-icon');
         icon.style.transform = elements.terminalContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
     });
@@ -135,9 +136,10 @@ function init() {
         document.getElementById('callsign').value = savedCall;
         document.getElementById('passcode').value = savedPass;
     }
-    
+
     // Default Terminal Visible
     elements.terminalContent.classList.remove('hidden');
+    document.body.classList.add('terminal-open');
     elements.toggleTerminal.querySelector('.terminal-toggle-icon').style.transform = 'rotate(180deg)';
 
     renderContacts();
@@ -151,18 +153,18 @@ let selectedCoords = null;
 
 function openMapModal() {
     document.getElementById('map-modal').classList.remove('hidden');
-    
+
     if (!map) {
         // Initialize Map
         map = L.map('map').setView([3.1390, 101.6869], 10); // Default to KL
-        
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         map.on('click', onMapClick);
     }
-    
+
     // Invalidate size to ensure it renders correctly after being hidden
     setTimeout(() => {
         map.invalidateSize();
@@ -180,25 +182,25 @@ function onMapClick(e) {
 
     currentMarker = L.marker(e.latlng).addTo(map);
     selectedCoords = e.latlng;
-    
-    document.getElementById('selected-coords').textContent = 
+
+    document.getElementById('selected-coords').textContent =
         `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
     document.getElementById('confirm-location-btn').disabled = false;
 }
 
 function sendMapBeacon() {
     if (!selectedCoords) return;
-    
+
     if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
         alert('Connect to APRS-IS first!');
         return;
     }
-    
+
     const coords = {
         latitude: selectedCoords.lat,
         longitude: selectedCoords.lng
     };
-    
+
     sendBeacon(coords);
     closeMapModal();
 }
