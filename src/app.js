@@ -744,9 +744,7 @@ function logPacket(msg, type = 'system') {
 
     // Force scroll to the bottom so the new, last item is visible
     requestAnimationFrame(() => {
-        if (elements.terminalContent) {
-            elements.terminalContent.scrollTop = elements.terminalContent.scrollHeight;
-        }
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
 }
 

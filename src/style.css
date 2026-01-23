@@ -698,7 +698,7 @@ input:focus {
     top: 80px;
     left: 50%;
     transform: translateX(-50%);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
 }
 
 .terminal-header {
@@ -973,24 +973,29 @@ input:focus {
 /* Fix leaflet z-index issue with modal if needed, though glass-card usually handles it well. 
    Leaflet uses high z-indexes. */
 /* Adjust dashboard when terminal is open */
+/* Adjust dashboard when terminal is open - DISABLED FOR OVERLAY MODE */
+/* 
 body.terminal-open #dashboard {
     height: calc(100vh - 280px);
-    /* 100vh - (Terminal Height + Top/Bottom adjustments) */
     position: absolute;
     top: 0;
     margin-top: 20px;
     width: 95%;
 }
+*/
 
-/* Ensure raw terminal stays at bottom */
+/* Ensure raw terminal stays at bottom - REMOVED (Legacy/Wrong ID) */
+/* 
 body.terminal-open #terminal-footer {
     height: 250px;
-    /* Explicit height when open */
 }
+*/
 
+/* 
 body.terminal-open .terminal-content {
     height: 220px;
 }
+*/
 
 /* Brand Logo Styles */
 .login-logo {
