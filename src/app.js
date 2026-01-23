@@ -744,8 +744,10 @@ function logPacket(msg, type = 'system') {
     } else {
         elements.terminalOutput.appendChild(div);
     }
-    // scroll to top to show latest log
-    elements.terminalOutput.scrollTop = 0;
+    // Force scroll to top to ensure latest log is visible
+    requestAnimationFrame(() => {
+        elements.terminalOutput.scrollTop = 0;
+    });
 }
 
 // Toast Notification System
