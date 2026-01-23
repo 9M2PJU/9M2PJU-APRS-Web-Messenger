@@ -2,15 +2,16 @@
 
 > A premium, glassmorphism-styled web interface for real-time APRS messaging and beaconing.
 
-![License](https://img.shields.io/badge/License-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-1.1.0-green.svg) ![Status](https://img.shields.io/badge/Status-Active-success.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg) ![Version](https://img.shields.io/badge/Version-1.2.0-green.svg) ![Status](https://img.shields.io/badge/Status-Active-success.svg)
 
 ## Overview
 
-APRS Web Messenger is a modern, responsive web application designed for Amateur Radio operators to connect to the **APRS-IS** network. It features a stunning glassmorphism UI/UX, real-time messaging capabilities, and an integrated map for beacon transmission.
+APRS Web Messenger is a modern, responsive web application designed for Amateur Radio operators to connect to the **APRS-IS** network. It features a stunning glassmorphism UI/UX, real-time messaging capabilities with **standard-compliant ACKs**, and an integrated map for beacon transmission.
 
 ## Features
 
-- **Real-Time Messaging**: Send and receive APRS messages instantly via APRS-IS.
+- **Real-Time Messaging**: Send and receive APRS messages instantly via APRS-IS with **delivery confirmation**.
+- **Mobile Native Experience**: persistent bottom navigation and full-screen layout for mobile.
 - **Glassmorphism Design**: sleek, modern interface with transparency and blur effects.
 - **Map Beaconing**:  Interact with a Leaflet-powered map to select and transmit your location.
 - **Mobile Responsive**:  Fully optimized for both desktop and mobile devices.

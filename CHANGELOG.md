@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-01-23
+
+### Added
+- **Mobile Native Layout**: Completely redesigned mobile view with bottom navigation bar and full-screen layout.
+- **APRS ACKs**: Implemented valid APRS messaging standards.
+    - Message ID generation for outgoing messages.
+    - Auto-ACK response for incoming messages.
+    - Visual delivery confirmation (checkmarks) for sent messages.
+- **Viewport Optimization**: Added `viewport-fit=cover` to support modern mobile notches.
+
 ## [1.1.0] - 2026-01-22
 
 ### Added
