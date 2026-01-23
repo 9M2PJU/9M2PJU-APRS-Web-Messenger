@@ -739,16 +739,13 @@ function logPacket(msg, type = 'system') {
     div.className = `log-line ${type}`;
     div.textContent = msg.trim();
 
-    // Prepend to show newest at the top
-    const output = elements.terminalOutput;
-    if (output.firstChild) {
-        output.insertBefore(div, output.firstChild);
-    } else {
-        output.appendChild(div);
-    }
+    // With flex-direction: column-reverse, appending places the element at the "start" (visual top)
+    elements.terminalOutput.appendChild(div);
 
-    // Ensure we are scrolled to the top to see the new message
-    output.scrollTop = 0;
+    // Reset scroll on the scrollable container to ensure we see the new item at the top
+    requestAnimationFrame(() => {
+        elements.terminalContent.scrollTop = 0;
+    });
 }
 
 // Toast Notification System
