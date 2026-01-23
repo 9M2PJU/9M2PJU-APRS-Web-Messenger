@@ -146,6 +146,7 @@ function init() {
     // Map Events
     document.getElementById('map-select-btn').addEventListener('click', openMapModal);
     document.getElementById('close-map').addEventListener('click', closeMapModal);
+    document.getElementById('clear-location-btn').addEventListener('click', clearMapSelection);
     document.getElementById('confirm-location-btn').addEventListener('click', sendMapBeacon);
 
     // Enter key to send
@@ -188,17 +189,48 @@ function openMapModal() {
         // Initialize Map
         map = L.map('map').setView([3.1390, 101.6869], 10); // Default to KL
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
+        // Use CartoDB Voyager Tiles (Fast & Reliable)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
         }).addTo(map);
 
         map.on('click', onMapClick);
     }
 
+    // specific button state update
+    updateMapButtons();
+
     // Invalidate size to ensure it renders correctly after being hidden
     setTimeout(() => {
         map.invalidateSize();
     }, 100);
+}
+
+function updateMapButtons() {
+    const clearBtn = document.getElementById('clear-location-btn');
+    const confirmBtn = document.getElementById('confirm-location-btn');
+
+    if (selectedCoords) {
+        clearBtn.classList.remove('hidden');
+        confirmBtn.disabled = false;
+        document.getElementById('selected-coords').textContent =
+            `${selectedCoords.lat.toFixed(5)}, ${selectedCoords.lng.toFixed(5)}`;
+    } else {
+        clearBtn.classList.add('hidden');
+        confirmBtn.disabled = true;
+        document.getElementById('selected-coords').textContent = 'None';
+    }
+}
+
+function clearMapSelection() {
+    if (currentMarker) {
+        map.removeLayer(currentMarker);
+    }
+    currentMarker = null;
+    selectedCoords = null;
+    updateMapButtons();
 }
 
 function closeMapModal() {
@@ -212,17 +244,14 @@ function onMapClick(e) {
 
     currentMarker = L.marker(e.latlng).addTo(map);
     selectedCoords = e.latlng;
-
-    document.getElementById('selected-coords').textContent =
-        `${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}`;
-    document.getElementById('confirm-location-btn').disabled = false;
+    updateMapButtons();
 }
 
 function sendMapBeacon() {
     if (!selectedCoords) return;
 
     if (!state.socket || state.socket.readyState !== WebSocket.OPEN) {
-        alert('Connect to APRS-IS first!');
+        showToast('Connect to APRS-IS first!', 'error');
         return;
     }
 
@@ -681,7 +710,7 @@ function handleManualGps() {
             elements.manualGpsBtn.textContent = 'SEND GPS NOW';
             elements.radarStatus.textContent = 'GPS ERROR';
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, timeout: 10000 }
     );
 }
 
