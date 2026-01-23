@@ -683,25 +683,34 @@ input:focus {
 
 /* Raw Terminal */
 /* Raw Terminal (Top) */
+/* Raw Terminal */
+/* Raw Terminal (Top) */
 #terminal-panel-top {
-    width: 100%;
-    background: #000;
-    border-bottom: 1px solid var(--accent-color);
-    z-index: 1000;
+    width: 95%;
+    max-width: 800px;
+    margin: 0 auto;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--accent-color);
+    border-radius: 0 0 15px 15px;
+    z-index: 2000;
     font-family: var(--font-mono);
-    position: relative;
-    /* In flow, pushing content down */
+    position: absolute;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
 
 .terminal-header {
-    padding: 5px 15px;
+    padding: 10px 20px;
     background: rgba(23, 147, 209, 0.2);
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--accent-color);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid rgba(23, 147, 209, 0.3);
 }
 
 .terminal-toggle-icon {
@@ -709,11 +718,10 @@ input:focus {
 }
 
 .terminal-content {
-    height: 200px;
+    height: 300px;
     overflow-y: auto;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.95);
-    border-top: 1px solid #333;
+    padding: 15px;
+    background: transparent;
 }
 
 .terminal-content.hidden {

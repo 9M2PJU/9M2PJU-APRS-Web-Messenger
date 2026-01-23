@@ -739,17 +739,13 @@ function logPacket(msg, type = 'system') {
     div.className = `log-line ${type}`;
     div.textContent = msg.trim();
 
-    // Explicitly prepend to put newest log at the top of the list
-    if (elements.terminalOutput.firstChild) {
-        elements.terminalOutput.insertBefore(div, elements.terminalOutput.firstChild);
-    } else {
-        elements.terminalOutput.appendChild(div);
-    }
+    // Append to put newest log at the bottom of the list
+    elements.terminalOutput.appendChild(div);
 
-    // Force scroll to the very top so the new, first item is visible
+    // Force scroll to the bottom so the new, last item is visible
     requestAnimationFrame(() => {
         if (elements.terminalContent) {
-            elements.terminalContent.scrollTop = 0;
+            elements.terminalContent.scrollTop = elements.terminalContent.scrollHeight;
         }
     });
 }
