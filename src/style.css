@@ -735,6 +735,10 @@ input:focus {
     display: none;
 }
 
+.mobile-nav {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .mobile-only {
         display: flex;
@@ -743,56 +747,112 @@ input:focus {
     #display-callsign {
         font-size: 0.9rem;
     }
+    
+    /* Hide top header toggle buttons as we have bottom nav now */
+    #mobile-menu-btn, #mobile-radar-btn {
+        display: none !important;
+    }
 
+    .glass-nav {
+        padding: 10px 15px; /* Compact header */
+    }
+
+    /* Content Area Adjustment */
     .content-wrapper {
+        height: calc(100% - 130px); /* adjusted for header + bottom nav */
         position: relative;
         overflow: hidden;
-        /* Contain absolute sidebars */
+        gap: 0;
     }
 
+    /* Tabs Logic */
     .sidebar,
-    .radar-sidebar {
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        z-index: 50;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        background: rgba(23, 29, 32, 0.95);
-        /* High opacity for overlay */
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        width: 280px;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-        display: flex;
-        /* Ensure flex layout */
-        flex-direction: column;
-    }
-
-    .sidebar {
-        left: 0;
-        transform: translateX(-110%);
-        border-right: 1px solid var(--glass-border);
-    }
-
-    .radar-sidebar {
-        right: 0;
-        transform: translateX(110%);
-        border-left: 1px solid var(--glass-border);
-    }
-
-    .sidebar.show-mobile {
-        transform: translateX(0);
-    }
-
-    .radar-sidebar.show-mobile {
-        transform: translateX(0);
-    }
-
+    .radar-sidebar,
     .chat-area {
         width: 100%;
+        height: 100%;
+        display: none; /* Hidden by default on mobile */
+        border: none;
+        background: transparent;
+        box-shadow: none;
         border-radius: 0;
-        border-left: none;
+    }
+
+    /* Default active tab (Chat) */
+    .chat-area.active-tab {
+        display: flex;
+    }
+
+    /* Other tabs active state */
+    .sidebar.active-tab,
+    .radar-sidebar.active-tab {
+        display: flex;
+        position: static;
+        transform: none;
+        background: transparent;
+        backdrop-filter: none;
+    }
+    
+    /* Tweaks for specific views */
+    .sidebar {
         border-right: none;
+    }
+    .radar-sidebar {
+        border-left: none;
+    }
+
+    /* Bottom Navigation Bar */
+    .mobile-nav {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 65px;
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid var(--glass-border);
+        z-index: 100;
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+    
+    .nav-item {
+        background: none;
+        border: none;
+        color: var(--text-secondary);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: color 0.2s;
+        flex: 1;
+        height: 100%;
+    }
+    
+    .nav-item.active {
+        color: var(--accent-color);
+    }
+    
+    .nav-item svg {
+        margin-bottom: 2px;
+    }
+
+    /* Chat Input Area Adjustments */
+    .chat-input-area {
+        padding: 15px;
+        background: var(--glass-bg);
+    }
+    
+    /* Ensure no scroll on body */
+    body {
+        position: fixed;
+        width: 100%;
     }
 }
 

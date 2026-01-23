@@ -126,12 +126,22 @@ function init() {
         icon.style.transform = elements.terminalContent.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(180deg)';
     });
 
-    // Mobile Toggles
+    // Mobile Toggles (Legacy - hidden in CSS)
     elements.showTerminalBtn.addEventListener('click', () => {
         elements.terminalFooter.classList.toggle('hidden');
     });
-    elements.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
-    elements.mobileRadarBtn.addEventListener('click', toggleMobileRadar);
+    // elements.mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+    // elements.mobileRadarBtn.addEventListener('click', toggleMobileRadar);
+
+    // Mobile Bottom Nav Logic
+    document.querySelectorAll('.nav-item[data-tab]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const tab = btn.dataset.tab;
+            switchMobileTab(tab);
+        });
+    });
+
+    document.getElementById('mobile-settings-btn').addEventListener('click', openSettings);
 
     // Map Events
     document.getElementById('map-select-btn').addEventListener('click', openMapModal);
@@ -163,6 +173,7 @@ function init() {
     renderMessages();
     startBeaconTimer();
     updateTelemetry();
+    switchMobileTab('chat');
 }
 
 // Map Logic
@@ -644,19 +655,33 @@ function sendBeacon(coords) {
     }
 }
 
-function toggleMobileMenu() {
-    const sidebar = document.querySelector('.sidebar');
-    const radar = document.querySelector('.radar-sidebar');
-    sidebar.classList.toggle('show-mobile');
-    radar.classList.remove('show-mobile');
-}
+function switchMobileTab(tabName) {
+    // Update Nav Icons
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        if (btn.dataset.tab === tabName) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
 
-function toggleMobileRadar() {
-    const sidebar = document.querySelector('.sidebar');
-    const radar = document.querySelector('.radar-sidebar');
-    radar.classList.toggle('show-mobile');
-    sidebar.classList.remove('show-mobile');
+    // Update View Visibility
+    const views = {
+        'chat': document.querySelector('.chat-area'),
+        'contacts': document.querySelector('.sidebar'),
+        'radar': document.querySelector('.radar-sidebar')
+    };
+
+    Object.keys(views).forEach(key => {
+        if (key === tabName) {
+            views[key].classList.add('active-tab');
+        } else {
+            views[key].classList.remove('active-tab');
+        }
+    });
 }
+// Legacy toggles removed/replaced
+
 
 function logPacket(msg, type = 'system') {
     const div = document.createElement('div');
