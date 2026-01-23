@@ -90,7 +90,7 @@ const elements = {
     radarStatus: document.querySelector('.radar-status'),
     deleteChatBtn: document.getElementById('delete-chat-btn'),
     // Terminal
-    terminalFooter: document.getElementById('terminal-footer'),
+    terminalFooter: document.getElementById('terminal-panel-top'),
     terminalOutput: document.getElementById('terminal-output'),
     toggleTerminal: document.getElementById('toggle-terminal'),
     terminalContent: document.getElementById('terminal-content'),

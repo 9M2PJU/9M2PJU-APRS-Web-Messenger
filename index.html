@@ -76,6 +76,20 @@
                 <button id="logout-btn" class="btn-secondary">Logout</button>
             </header>
 
+            <!-- Raw Terminal (Top) -->
+            <div id="terminal-panel-top">
+                <div class="terminal-header" id="toggle-terminal">
+                    <span>RAW_PACKET_STREAM</span>
+                    <span class="terminal-toggle-icon">▼</span>
+                </div>
+                <div id="terminal-content" class="terminal-content hidden">
+                    <div id="terminal-output">
+                        <!-- Logs go here -->
+                        <div class="log-line system">System Ready.</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="content-wrapper">
                 <aside class="sidebar glass-card">
                     <div class="sidebar-header">
@@ -269,19 +283,7 @@
 
 
 
-    <!-- Raw Terminal -->
-    <footer id="terminal-footer">
-        <div class="terminal-header" id="toggle-terminal">
-            <span>RAW_PACKET_STREAM</span>
-            <span class="terminal-toggle-icon">▲</span>
-        </div>
-        <div id="terminal-content" class="terminal-content hidden">
-            <div id="terminal-output">
-                <!-- Logs go here -->
-                <div class="log-line system">System Ready.</div>
-            </div>
-        </div>
-    </footer>
+
     </div>
 
     <!-- Toast Notification Container -->

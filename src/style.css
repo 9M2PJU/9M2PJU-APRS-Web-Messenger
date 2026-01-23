@@ -682,15 +682,15 @@ input:focus {
 }
 
 /* Raw Terminal */
-#terminal-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
+/* Raw Terminal (Top) */
+#terminal-panel-top {
     width: 100%;
     background: #000;
-    border-top: 1px solid var(--accent-color);
+    border-bottom: 1px solid var(--accent-color);
     z-index: 1000;
     font-family: var(--font-mono);
+    position: relative;
+    /* In flow, pushing content down */
 }
 
 .terminal-header {
