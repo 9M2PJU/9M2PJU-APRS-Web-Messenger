@@ -738,8 +738,14 @@ function logPacket(msg, type = 'system') {
     const div = document.createElement('div');
     div.className = `log-line ${type}`;
     div.textContent = msg.trim();
-    elements.terminalOutput.appendChild(div);
-    elements.terminalOutput.scrollTop = elements.terminalOutput.scrollHeight;
+    // prepend new log at the top
+    if (elements.terminalOutput.firstChild) {
+        elements.terminalOutput.insertBefore(div, elements.terminalOutput.firstChild);
+    } else {
+        elements.terminalOutput.appendChild(div);
+    }
+    // scroll to top to show latest log
+    elements.terminalOutput.scrollTop = 0;
 }
 
 // Toast Notification System
