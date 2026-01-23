@@ -739,12 +739,18 @@ function logPacket(msg, type = 'system') {
     div.className = `log-line ${type}`;
     div.textContent = msg.trim();
 
-    // With flex-direction: column-reverse, appending places the element at the "start" (visual top)
-    elements.terminalOutput.appendChild(div);
+    // Explicitly prepend to put newest log at the top of the list
+    if (elements.terminalOutput.firstChild) {
+        elements.terminalOutput.insertBefore(div, elements.terminalOutput.firstChild);
+    } else {
+        elements.terminalOutput.appendChild(div);
+    }
 
-    // Reset scroll on the scrollable container to ensure we see the new item at the top
+    // Force scroll to the very top so the new, first item is visible
     requestAnimationFrame(() => {
-        elements.terminalContent.scrollTop = 0;
+        if (elements.terminalContent) {
+            elements.terminalContent.scrollTop = 0;
+        }
     });
 }
 
