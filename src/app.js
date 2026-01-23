@@ -1,4 +1,4 @@
-import { generateLoginLine, generateMessagePacket, generatePositionPacket, parsePacket, APRS_CONFIG } from './aprs.js';
+import { generateLoginLine, generateMessagePacket, generatePositionPacket, parsePacket, APRS_CONFIG, generateMessageId, generateAckPacket } from './aprs.js';
 
 // APRS Symbols Map (Common Subset)
 const APRS_SYMBOLS = [
@@ -304,7 +304,9 @@ function handleSendMessage(e) {
         return;
     }
 
-    const packet = generateMessagePacket(state.callsign, state.currentContact, content);
+    const msgId = generateMessageId();
+    const packet = generateMessagePacket(state.callsign, state.currentContact, content, msgId);
+
     // Send to APRS-IS
     if (state.socket && state.socket.readyState === WebSocket.OPEN) {
         state.socket.send(packet);
@@ -320,7 +322,9 @@ function handleSendMessage(e) {
             source: state.callsign,
             content: content,
             type: 'sent',
-            time: new Date().toLocaleTimeString()
+            time: new Date().toLocaleTimeString(),
+            id: msgId,
+            acked: false
         });
 
         elements.messageInput.value = '';
@@ -377,22 +381,48 @@ function connectWebSocket() {
                     }
                 }
 
-                if (parsed && parsed.type === 'message') {
-                    addMessageToState(parsed.source, {
-                        source: parsed.source,
-                        content: parsed.content,
-                        type: 'received',
-                        time: parsed.timestamp
-                    });
-                    state.messagesReceived++;
-                    localStorage.setItem('aprs_msgs_received', state.messagesReceived);
-                    updateTelemetry();
-                    showToast(`New message from ${parsed.source}`, 'info');
-                    renderMessages();
-                    renderContacts();
+                if (parsed) {
+                    if (parsed.type === 'message') {
+                        // Handle Incoming Message
+                        addMessageToState(parsed.source, {
+                            source: parsed.source,
+                            content: parsed.content,
+                            type: 'received',
+                            time: parsed.timestamp,
+                            id: parsed.msgId
+                        });
+                        state.messagesReceived++;
+                        localStorage.setItem('aprs_msgs_received', state.messagesReceived);
+                        updateTelemetry();
+                        showToast(`New message from ${parsed.source}`, 'info');
+                        renderMessages();
+                        renderContacts();
+
+                        // Auto-ACK if ID exists
+                        if (parsed.msgId) {
+                            const ackPacket = generateAckPacket(state.callsign, parsed.source, parsed.msgId);
+                            // Brief delay to simulate human/radio latency slightly, good for anti-flood too
+                            setTimeout(() => {
+                                if (state.socket && state.socket.readyState === WebSocket.OPEN) {
+                                    state.socket.send(ackPacket);
+                                    logPacket(ackPacket, 'send');
+                                    console.log(`Sent ACK for ${parsed.source}:{${parsed.msgId}`);
+                                }
+                            }, 500);
+                        }
+
+                    } else if (parsed.type === 'ack') {
+                        // Handle Incoming ACK
+                        console.log(`Received ACK from ${parsed.source} for ID: ${parsed.msgId}`);
+                        logPacket(line, 'recv');
+                        markMessageAcked(parsed.source, parsed.msgId);
+                    }
                 }
-                console.log('RECV:', line);
-                logPacket(line, 'recv');
+
+                if (!parsed || parsed.type === 'other') {
+                    // console.log('RECV:', line);
+                    logPacket(line, 'recv');
+                }
             });
         };
 
@@ -436,14 +466,35 @@ function renderMessages() {
     msgs.forEach(msg => {
         const msgEl = document.createElement('div');
         msgEl.className = `message ${msg.type}`;
+
+        let statusIcon = '';
+        if (msg.type === 'sent') {
+            statusIcon = msg.acked ? '<span class="status-tick double">✓✓</span>' : '<span class="status-tick">✓</span>';
+        }
+
         msgEl.innerHTML = `
             <div class="msg-bubble">${msg.content}</div>
-            <span class="time">${msg.time}</span>
+            <div class="msg-meta">
+                <span class="time">${msg.time}</span>
+                ${statusIcon}
+            </div>
         `;
         elements.messageContainer.appendChild(msgEl);
     });
 
     elements.messageContainer.scrollTop = elements.messageContainer.scrollHeight;
+}
+
+function markMessageAcked(contact, msgId) {
+    if (!state.messages[contact]) return;
+
+    const msg = state.messages[contact].find(m => m.id === msgId);
+    if (msg) {
+        msg.acked = true;
+        saveMessages();
+        renderMessages();
+        showToast(`Message to ${contact} delivered.`, 'success');
+    }
 }
 
 function renderContacts() {

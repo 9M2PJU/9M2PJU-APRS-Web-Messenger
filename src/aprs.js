@@ -18,32 +18,75 @@ export function generateLoginLine(callsign, passcode) {
 }
 
 /**
+ * Generates a random 5-character alphanumeric ID for APRS messages.
+ */
+export function generateMessageId() {
+    return Math.random().toString(36).substring(2, 7).toUpperCase();
+}
+
+/**
  * Generates an APRS message packet.
- * Format: SOURCE>DEST,PATH::DESTINATION:MESSAGE
+ * Format: SOURCE>DEST,PATH::DESTINATION:MESSAGE{ID
  * Note: DESTINATION must be 9 characters, padded with spaces.
  */
-export function generateMessagePacket(source, destination, message) {
+export function generateMessagePacket(source, destination, message, msgId = null) {
     const destPadded = destination.toUpperCase().padEnd(9, ' ');
-    return `${source.toUpperCase()}>APJUMB,TCPIP*::${destPadded}:${message}\r\n`;
+    const idPart = msgId ? `{${msgId}` : '';
+    // Limit message length if needed, but for now just append
+    return `${source.toUpperCase()}>APJUMB,TCPIP*::${destPadded}:${message}${idPart}\r\n`;
+}
+
+/**
+ * Generates an APRS ACK packet.
+ * Format: SOURCE>DEST,PATH::DESTINATION:ackID
+ */
+export function generateAckPacket(source, destination, ackId) {
+    const destPadded = destination.toUpperCase().padEnd(9, ' ');
+    return `${source.toUpperCase()}>APJUMB,TCPIP*::${destPadded}:ack${ackId}\r\n`;
 }
 
 /**
  * Parses an incoming APRS-IS line.
- * Currently focuses on extracting messages.
- * Format: SOURCE>DEST,PATH::TARGET:MESSAGE
+ * Handles Messages (::) and extracts ID if present.
  */
 export function parsePacket(line) {
-    if (!line || line.startsWith('#')) return null; // Ignore server comments
+    if (!line || line.startsWith('#')) return null;
 
     // Look for message packets (indicated by ::)
+    // Regex breakdown:
+    // ^([^>]+)     : Source
+    // >[^:]+::     : Path separator and "::"
+    // ([^:]+)      : Target (Destination)
+    // :(.*)$       : Message Content
+
+    // Note: This simple regex might need refinement for complex paths, but is standard for APRS-IS msgs
     const msgMatch = line.match(/^([^>]+)>[^:]+::([^:]+):(.*)$/);
     if (msgMatch) {
-        const [, source, target, message] = msgMatch;
+        const [, source, target, rawContent] = msgMatch;
+        let content = rawContent.trim();
+        let msgId = null;
+        let isAck = false;
+
+        // Check for ACK
+        if (content.startsWith('ack') && content.length <= 8) {
+            isAck = true;
+            msgId = content.substring(3);
+        } else {
+            // Check for Message ID at end ({xxxxx)
+            const idMatch = content.match(/\{([A-Z0-9]{1,5})$/);
+            if (idMatch) {
+                msgId = idMatch[1];
+                // Strip ID from content for display
+                content = content.substring(0, idMatch.index);
+            }
+        }
+
         return {
-            type: 'message',
+            type: isAck ? 'ack' : 'message',
             source: source.trim(),
             target: target.trim(),
-            content: message.trim(),
+            content: content,
+            msgId: msgId, // The ID to ACK (if message) or the ID being ACKed (if type is ack)
             timestamp: new Date().toLocaleTimeString()
         };
     }
