@@ -128,6 +128,16 @@ function encodePosition(lat, lon) {
  * Example: 9M2PJU>...>...!0310.50N/10140.20E>My Beacon
  */
 export function generatePositionPacket(source, lat, lon, symbolCode = '/>', comment = '') {
+    // Validate inputs
+    if (!symbolCode || symbolCode.length < 2) {
+        console.warn('Invalid symbol code, defaulting to /> (Car)');
+        symbolCode = '/>';
+    }
+
+    if (isNaN(lat) || isNaN(lon)) {
+        throw new Error('Invalid coordinates: must be numeric');
+    }
+
     const pos = encodePosition(lat, lon);
     const table = symbolCode.charAt(0);
     const symbol = symbolCode.charAt(1);
