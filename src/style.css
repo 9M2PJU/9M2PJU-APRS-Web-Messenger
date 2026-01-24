@@ -189,7 +189,11 @@ input:focus {
 /* Dashboard */
 #dashboard {
     width: 95%;
+    max-width: 1400px;
+    /* Constrain max width for ultra-wide monitors */
     height: 90vh;
+    max-height: 1080px;
+    /* Prevent excessive vertical stretching */
     display: flex;
     flex-direction: column;
     gap: 20px;
