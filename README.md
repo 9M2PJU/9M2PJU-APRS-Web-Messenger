@@ -27,18 +27,6 @@ APRS Web Messenger is a modern, responsive web application designed for Amateur 
 - An Amateur Radio Callsign and a valid **APRS-IS Passcode**.
   - *Don't have a passcode? [Generate one here](https://pass.hamradio.my).*
 
-### Installation
-
-1.  **Clone the Repository**
-    ```bash
-    git clone https://github.com/yourusername/9M2PJU-APRS-Web-Messenger.git
-    cd 9M2PJU-APRS-Web-Messenger
-    ```
-
-2.  **Run Locally**
-    Open `index.html` in your browser.
-    *Note: For best results with modules, serve via a local server (e.g., Live Server in VS Code or `python3 -m http.server`).*
-
 ## Usage
 
 1.  **Login**: Enter your **Callsign** (e.g., 9M2PJU-1) and **Passcode**.
