@@ -33,7 +33,7 @@ export function generateMessagePacket(source, destination, message, msgId = null
     const destPadded = destination.toUpperCase().padEnd(9, ' ');
     const idPart = msgId ? `{${msgId}` : '';
     // Limit message length if needed, but for now just append
-    return `${source.toUpperCase()}>APJUMB,TCPIP*::${destPadded}:${message}${idPart}\r\n`;
+    return `${source.toUpperCase()}>APRPJS,TCPIP*::${destPadded}:${message}${idPart}\r\n`;
 }
 
 /**
@@ -42,7 +42,7 @@ export function generateMessagePacket(source, destination, message, msgId = null
  */
 export function generateAckPacket(source, destination, ackId) {
     const destPadded = destination.toUpperCase().padEnd(9, ' ');
-    return `${source.toUpperCase()}>APJUMB,TCPIP*::${destPadded}:ack${ackId}\r\n`;
+    return `${source.toUpperCase()}>APRPJS,TCPIP*::${destPadded}:ack${ackId}\r\n`;
 }
 
 /**
@@ -124,7 +124,7 @@ function encodePosition(lat, lon) {
 
 /**
  * Generates an APRS position packet (Beacon).
- * Format: SOURCE>APJUMB,TCPIP*:!LAT(Table)LON(Symbol)COMMENT
+ * Format: SOURCE>APRPJS,TCPIP*:!LAT(Table)LON(Symbol)COMMENT
  * Example: 9M2PJU>...>...!0310.50N/10140.20E>My Beacon
  */
 export function generatePositionPacket(source, lat, lon, symbolCode = '/>', comment = '') {
@@ -141,5 +141,5 @@ export function generatePositionPacket(source, lat, lon, symbolCode = '/>', comm
     const pos = encodePosition(lat, lon);
     const table = symbolCode.charAt(0);
     const symbol = symbolCode.charAt(1);
-    return `${source.toUpperCase()}>APJUMB,TCPIP*:!${pos.lat}${table}${pos.lon}${symbol}${comment}\r\n`;
+    return `${source.toUpperCase()}>APRPJS,TCPIP*:!${pos.lat}${table}${pos.lon}${symbol}${comment}\r\n`;
 }
